@@ -9,25 +9,33 @@ const IDLength = 20
 
 type KademliaID [IDLength]byte
 
+/*
+*
+ */
 func NewKademliaID(data string) *KademliaID {
-	decoded, _ := hex.DecodeString(data)
+	//Returns the bytes represented by the hexadecimal string data.
+	decoded, _ := hex.DecodeString(data) //decoded = the bits, _ = ignore the error returned if any.
 
-	newKademliaID := KademliaID{}
+	newKademliaID := KademliaID{} //Create a new empty KademliaID
 	for i := 0; i < IDLength; i++ {
-		newKademliaID[i] = decoded[i]
+		newKademliaID[i] = decoded[i] //Add bits to KademliaID.
 	}
 
-	return &newKademliaID
+	return &newKademliaID //Return the Address of the kademliaID.
 }
-
+/**
+* Generate a randomized KademliaID.
+ */
 func NewRandomKademliaID() *KademliaID {
 	newKademliaID := KademliaID{}
 	for i := 0; i < IDLength; i++ {
-		newKademliaID[i] = uint8(rand.Intn(256))
+		newKademliaID[i] = uint8(rand.Intn(256)) //Assign random bits to the KademliaID
 	}
-	return &newKademliaID
+	return &newKademliaID //Return address of the kademliaID.
 }
-
+//Find the lesser KademliaID.
+//returns true if kademliaID is less than OtherKademliaId.
+//Otherwise return false.
 func (kademliaID KademliaID) Less(otherKademliaID *KademliaID) bool {
 	for i := 0; i < IDLength; i++ {
 		if kademliaID[i] != otherKademliaID[i] {
@@ -36,7 +44,9 @@ func (kademliaID KademliaID) Less(otherKademliaID *KademliaID) bool {
 	}
 	return false
 }
-
+/*
+* Check if two KademliaID are equal to each other.
+ */
 func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 	for i := 0; i < IDLength; i++ {
 		if kademliaID[i] != otherKademliaID[i] {
@@ -47,7 +57,7 @@ func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 }
 
 /**
-* Calculate distance between 2 nodes and return the path between them.
+* Calculate distance between 2 nodes and return the path/distance between them in bits.
  */
 func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 	result := KademliaID{}
@@ -56,7 +66,9 @@ func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 	}
 	return &result
 }
-
+/**
+* Returns the string representation of the KademliaId.
+ */
 func (kademliaID *KademliaID) String() string {
 	return hex.EncodeToString(kademliaID[0:IDLength])
 }

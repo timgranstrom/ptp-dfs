@@ -31,32 +31,38 @@ func (routingTable *RoutingTable) AddContact(contact Contact) {
 	bucket := routingTable.buckets[bucketIndex] //Get the bucket.
 	bucket.AddContact(contact) //Add the contact to the bucket.
 }
-
+/**
+* Find closest contacts from kademliaID (target) in routingTable
+ */
 func (routingTable *RoutingTable) FindClosestContacts(target *KademliaID, count int) []Contact {
 	var candidates ContactCandidates
-	bucketIndex := routingTable.getBucketIndex(target)
-	bucket := routingTable.buckets[bucketIndex]
+	bucketIndex := routingTable.getBucketIndex(target) //Get bucket index of the KademliaID (target)
+	bucket := routingTable.buckets[bucketIndex] //Retrieve bucket
 
+	//Get all contacts in the bucket and calc the distance between them and target.
+	//Then append these contacts into candidates.
 	candidates.Append(bucket.GetContactAndCalcDistance(target))
 
+	//Loop through all buckets or until the nr of candidates have been reached.
+	//Start from the targets bucket.
 	for i := 1; (bucketIndex-i >= 0 || bucketIndex+i < IDLength*8) && candidates.Len() < count; i++ {
 		if bucketIndex-i >= 0 {
-			bucket = routingTable.buckets[bucketIndex-i]
-			candidates.Append(bucket.GetContactAndCalcDistance(target))
+			bucket = routingTable.buckets[bucketIndex-i] //Get previous bucket
+			candidates.Append(bucket.GetContactAndCalcDistance(target)) //Get all contacts in bucket with distance to target
 		}
 		if bucketIndex+i < IDLength*8 {
-			bucket = routingTable.buckets[bucketIndex+i]
-			candidates.Append(bucket.GetContactAndCalcDistance(target))
+			bucket = routingTable.buckets[bucketIndex+i] //Get next bucket
+			candidates.Append(bucket.GetContactAndCalcDistance(target)) //Get all contacts in bucket with distance to target
 		}
 	}
 
-	candidates.Sort()
+	candidates.Sort() //Sort candidates in increasing distance
 
 	if count > candidates.Len() {
-		count = candidates.Len()
+		count = candidates.Len() //Set the count to match the amount of candidates
 	}
 
-	return candidates.GetContacts(count)
+	return candidates.GetContacts(count) //Returns a list of contacts from candidates.
 }
 
 /**
