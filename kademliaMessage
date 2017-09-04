@@ -1,0 +1,15 @@
+syntax = "proto2";
+	package ptp_dfs
+
+    enum MessageType{
+    PING = 0;
+    FIND_CONTACT = 1;
+    FIND_DATA = 2;
+    SEND_STORE = 3;
+    }
+
+	message KademliaMessage {
+	  required string kademliaID;
+	  required MessageType methodType = 0;
+	  optional Contact[];
+	}
