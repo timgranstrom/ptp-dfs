@@ -30,3 +30,7 @@ message? or should we format one message for each method? (Ping,findContact,Send
 *(done) For lookupContact, should we query the closest relevant contacts, then get a response with new contacts and
 then query those contacts if they have not already appeared etc. Is this the recursive
 way you had in mind?
+
+##Useful links and docs
+####Worker Queue
+http://nesv.github.io/golang/2014/02/25/worker-queues-in-go.html
