@@ -26,9 +26,9 @@ syntax = "proto2";
     }
 
 	message WrapperMessage {
-    	  required MessageType msg_type = 1; //To know what type of message it contains
+    	  required MessageType message_type = 1; //To know what type of message it contains
     	  required int64 message_id = 2; //Id of the message
-    	  oneof message{
+    	  oneof messages{
     	    PingMessage msg_1 = 3;
     	    FindContactMessage msg_2 = 4;
     	  }

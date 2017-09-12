@@ -19,19 +19,15 @@ func (network *Network) SendPingMessage(contact *Contact) {
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
 	// TODO
-	testMessage := &protoMessages.KademliaMessage{
-		KademliaID: proto.String("FuckingWork"),
-		MethodType: protoMessages.MessageType.Enum(1),
+
+	lookupContactMessage := &protoMessages.FindContactMessage{
+		KademliaTargetId: proto.String("KadTestId"),
+
 	}
 
-	data, err := proto.Marshal(testMessage)
-	if(err != nil){
-		log.Fatal("MARSHALING ERROR: ",err)
-	}else{
-		newMessage := &protoMessages.KademliaMessage{}
-		proto.Unmarshal(data,newMessage)
-
-		log.Println("SUCCESS! "+newMessage.GetKademliaID())
+	wrapperMessage := &protoMessages.WrapperMessage{
+		MessageId: proto.Int64(11),
+		MessageType: protoMessages.MessageType.Enum(1),
 	}
 }
 
