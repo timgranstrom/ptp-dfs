@@ -1,4 +1,4 @@
-package ptp_dfs
+package ptp
 
 const bucketSize = 20 //contains a k number of nodes.
 

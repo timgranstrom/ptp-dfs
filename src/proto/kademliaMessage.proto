@@ -1,5 +1,6 @@
 syntax = "proto2";
-	package ptp_dfs
+
+	package example;
 
     enum MessageType{
     PING = 0;
@@ -9,7 +10,7 @@ syntax = "proto2";
     }
 
 	message KademliaMessage {
-	  required string kademliaID;
-	  required MessageType methodType = 0;
-	  optional Contact[];
+	  required string kademliaID = 1;
+	  required MessageType methodType = 2;
+	  required int64 messageID = 3;
 	}

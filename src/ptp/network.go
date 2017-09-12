@@ -1,4 +1,4 @@
-package ptp_dfs
+package ptp
 import (
 	"github.com/golang/protobuf/proto"
 	"net"

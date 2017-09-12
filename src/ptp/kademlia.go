@@ -1,4 +1,4 @@
-package ptp_dfs
+package ptp
 
 type Kademlia struct {
 	routingTable RoutingTable
