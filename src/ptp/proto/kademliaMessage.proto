@@ -1,0 +1,41 @@
+syntax = "proto2";
+
+	package protoMessages;
+
+    enum MessageType{
+    PING = 0;
+    FIND_CONTACT = 1;
+    FIND_DATA = 2;
+    SEND_STORE = 3;
+    }
+
+	message KademliaMessage {
+	  required string kademliaID = 1;
+	  required MessageType methodType = 2;
+
+	}
+
+    //Empty because we only get response if alive
+	message PingMessage {
+    }
+
+    //Message to find contacts, returns a "list" of contacts
+    message FindContactMessage {
+    	    required string kademlia_target_id = 1; //Id we're looking for
+    	    repeated Contact contacts = 2; //list of contacts returned
+    }
+
+	message WrapperMessage {
+    	  required MessageType msg_type = 1; //To know what type of message it contains
+    	  required int64 message_id = 2; //Id of the message
+    	  oneof message{
+    	    PingMessage msg_1 = 3;
+    	    FindContactMessage msg_2 = 4;
+    	  }
+    	}
+
+    //Protobuf representation of Contact.go
+    message Contact{
+        required string kademlia_id = 1;
+        required string address = 2;
+    }

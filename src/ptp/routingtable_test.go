@@ -20,3 +20,11 @@ func TestRoutingTable(t *testing.T) {
 		fmt.Println(contacts[i].String())
 	}
 }
+
+func TestProtobufMessageMarshal(t *testing.T) {
+	contact := NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000")
+	//rt := NewRoutingTable(contact)
+	network := Network{}
+	network.SendFindContactMessage(&contact)
+
+}
