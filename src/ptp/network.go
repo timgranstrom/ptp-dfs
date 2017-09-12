@@ -1,6 +1,6 @@
 package ptp
 import (
-	"log"
+	//"log"
 	"github.com/golang/protobuf/proto"
 	//"net"
 	"ptp/proto"
@@ -22,13 +22,20 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 
 	lookupContactMessage := &protoMessages.FindContactMessage{
 		KademliaTargetId: proto.String("KadTestId"),
-
 	}
+
+	wrapMsg := protoMessages.WrapperMessage_Msg_2{lookupContactMessage}
 
 	wrapperMessage := &protoMessages.WrapperMessage{
 		MessageId: proto.Int64(11),
 		MessageType: protoMessages.MessageType.Enum(1),
+		Messages:&wrapMsg,
 	}
+
+	data,_ := proto.Marshal(wrapperMessage) //Marshal the wrapper message
+
+	probufHandler := ProtobufHandler{}
+	probufHandler.UnMarshalWrapperMessage(data)
 }
 
 func (network *Network) SendFindDataMessage(hash string) {

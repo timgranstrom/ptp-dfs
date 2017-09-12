@@ -2,9 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="45dcec57-47b9-4a53-b582-bf74417f46b8" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pkg/windows_amd64/ptp/proto.a" afterPath="$PROJECT_DIR$/pkg/windows_amd64/ptp/proto.a" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ptp/network.go" afterPath="$PROJECT_DIR$/src/ptp/network.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go" afterPath="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto" afterPath="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ptp/protobufhandler.go" afterPath="$PROJECT_DIR$/src/ptp/protobufhandler.go" />
     </list>
     <ignored path="$PROJECT_DIR$/.idea/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -49,35 +50,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="network.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="network.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ptp/network.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="275">
-              <caret line="31" column="1" lean-forward="true" selection-start-line="31" selection-start-column="1" selection-end-line="31" selection-end-column="1" />
-              <folding>
-                <element signature="e#12#87#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="kademliaMessage.pb.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="231">
-              <caret line="140" column="12" lean-forward="false" selection-start-line="140" selection-start-column="4" selection-end-line="140" selection-end-column="12" />
-              <folding>
-                <element signature="e#341#424#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="kademliaMessage.proto" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="382">
-              <caret line="29" column="24" lean-forward="false" selection-start-line="29" selection-start-column="24" selection-end-line="29" selection-end-column="24" />
+            <state relative-caret-position="42">
+              <caret line="2" column="6" lean-forward="false" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="6" />
               <folding />
             </state>
           </provider>
@@ -86,11 +63,33 @@
       <file leaf-file-name="protobufhandler.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ptp/protobufhandler.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="15" column="5" lean-forward="true" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
+            <state relative-caret-position="357">
+              <caret line="17" column="39" lean-forward="false" selection-start-line="17" selection-start-column="39" selection-end-line="17" selection-end-column="39" />
               <folding>
                 <element signature="e#13#79#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="kademliaMessage.pb.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="294">
+              <caret line="155" column="1" lean-forward="true" selection-start-line="155" selection-start-column="1" selection-end-line="155" selection-end-column="1" />
+              <folding>
+                <element signature="e#341#424#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="kademliaMessage.proto" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="340">
+              <caret line="27" column="28" lean-forward="true" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="28" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -146,10 +145,10 @@
         <option value="$PROJECT_DIR$/src/proto/kademliaMessage.proto" />
         <option value="$PROJECT_DIR$/src/ptp/routingtable_test.go" />
         <option value="$PROJECT_DIR$/src/ptp/kademlia.go" />
-        <option value="$PROJECT_DIR$/src/ptp/protobufhandler.go" />
         <option value="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto" />
         <option value="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go" />
         <option value="$PROJECT_DIR$/src/ptp/network.go" />
+        <option value="$PROJECT_DIR$/src/ptp/protobufhandler.go" />
       </list>
     </option>
   </component>
@@ -207,11 +206,11 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/routingtable_test.go" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/ptp/proto" />
     <property name="configurable.Global.GOPATH.is.expanded" value="true" />
     <property name="configurable.Project.GOPATH.is.expanded" value="true" />
     <property name="configurable.Module.GOPATH.is.expanded" value="false" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="io.protostuff.jetbrains.plugin.settings.ProtobufSettingsConfigurable" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
     <property name="DefaultGoTemplateProperty" value="Go File" />
   </component>
@@ -300,9 +299,6 @@
     <option name="remove_strategy" value="false" />
   </component>
   <component name="TestHistory">
-    <history-entry file="All_in_'ptp-dfs' - 2017.09.01 at 09h 52m 40s.xml">
-      <configuration name="All in 'ptp-dfs'" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="All_in_'ptp-dfs' - 2017.09.01 at 09h 56m 01s.xml">
       <configuration name="All in 'ptp-dfs'" configurationId="GoTestRunConfiguration" />
     </history-entry>
@@ -330,6 +326,9 @@
     <history-entry file="TestProtobufMessageMarshal_in_routingtable_test_go - 2017.09.12 at 10h 29m 31s.xml">
       <configuration name="TestProtobufMessageMarshal in routingtable_test.go" configurationId="GoTestRunConfiguration" />
     </history-entry>
+    <history-entry file="TestProtobufMessageMarshal_in_routingtable_test_go - 2017.09.12 at 15h 41m 03s.xml">
+      <configuration name="TestProtobufMessageMarshal in routingtable_test.go" configurationId="GoTestRunConfiguration" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
@@ -339,9 +338,9 @@
       <window_info id="Debug Logs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40625" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17598684" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Execute Anonymous" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15789473" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2631579" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20045386" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32980332" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -410,7 +409,7 @@
         <state relative-caret-position="504">
           <caret line="27" column="1" lean-forward="true" selection-start-line="27" selection-start-column="1" selection-end-line="27" selection-end-column="1" />
           <folding>
-            <element signature="e#12#87#0" expanded="true" />
+            <element signature="e#12#89#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -472,7 +471,7 @@
         <state relative-caret-position="294">
           <caret line="17" column="55" lean-forward="false" selection-start-line="17" selection-start-column="55" selection-end-line="17" selection-end-column="55" />
           <folding>
-            <element signature="e#12#87#0" expanded="true" />
+            <element signature="e#12#89#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -501,7 +500,7 @@
         <state relative-caret-position="315">
           <caret line="18" column="11" lean-forward="true" selection-start-line="18" selection-start-column="11" selection-end-line="18" selection-end-column="11" />
           <folding>
-            <element signature="e#12#87#0" expanded="true" />
+            <element signature="e#12#89#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -609,7 +608,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#12#87#0" expanded="true" />
+            <element signature="e#12#89#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -743,16 +742,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ptp/protobufhandler.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="15" column="5" lean-forward="true" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
-          <folding>
-            <element signature="e#13#79#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ptp/routingtable_test.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="588">
@@ -771,18 +760,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="382">
-          <caret line="29" column="24" lean-forward="false" selection-start-line="29" selection-start-column="24" selection-end-line="29" selection-end-column="24" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="231">
-          <caret line="140" column="12" lean-forward="false" selection-start-line="140" selection-start-column="4" selection-end-line="140" selection-end-column="12" />
+        <state relative-caret-position="294">
+          <caret line="155" column="1" lean-forward="true" selection-start-line="155" selection-start-column="1" selection-end-line="155" selection-end-column="1" />
           <folding>
             <element signature="e#341#424#0" expanded="true" />
           </folding>
@@ -791,11 +772,27 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ptp/network.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="275">
-          <caret line="31" column="1" lean-forward="true" selection-start-line="31" selection-start-column="1" selection-end-line="31" selection-end-column="1" />
+        <state relative-caret-position="42">
+          <caret line="2" column="6" lean-forward="false" selection-start-line="2" selection-start-column="6" selection-end-line="2" selection-end-column="6" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ptp/protobufhandler.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="17" column="39" lean-forward="false" selection-start-line="17" selection-start-column="39" selection-end-line="17" selection-end-column="39" />
           <folding>
-            <element signature="e#12#87#0" expanded="true" />
+            <element signature="e#13#79#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="27" column="28" lean-forward="true" selection-start-line="27" selection-start-column="28" selection-end-line="27" selection-end-column="28" />
+          <folding />
         </state>
       </provider>
     </entry>
