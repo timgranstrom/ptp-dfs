@@ -11,7 +11,7 @@ message WrapperMessage {
 	oneof messages { //Type-of-message-specific header, only one can be used
 		PingMessage msg_1 = 5;
 		LookupContactMessage msg_2 = 6;
-		FindDataMessage msg_3 = 7;
+		LookupDataMessage msg_3 = 7;
 		StoreMessage msg_4 = 8;
 	}
 }
@@ -39,12 +39,13 @@ message Contact {
 }
 
 //Sub-header to find data with a certain id, returns closer contacts if it wasn't found
-message FindDataMessage {
+message LookupDataMessage {
 	required string kademlia_target_id = 1; //Id of target data
 	repeated Contact contacts = 2; //If target wasn't found, return closer contacts
 }
 
 //Sub-header to share where a nodes shared data can be found
 message StoreMessage {
-	required string kademlia_value_id = 1;
+	required string key_store = 1; //Key should be kademliaID
+	required string value_store = 2; //Value should be IP Address of node holding
 }

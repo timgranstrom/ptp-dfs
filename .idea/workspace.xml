@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="45dcec57-47b9-4a53-b582-bf74417f46b8" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pkg/windows_amd64/ptp/proto.a" afterPath="$PROJECT_DIR$/pkg/windows_amd64/ptp/proto.a" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ptp/proto/protoMessages.pb.go" afterPath="$PROJECT_DIR$/src/ptp/proto/protoMessages.pb.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ptp/proto/protoMessages.proto" afterPath="$PROJECT_DIR$/src/ptp/proto/protoMessages.proto" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ptp/protobufhandler.go" afterPath="$PROJECT_DIR$/src/ptp/protobufhandler.go" />
     </list>
     <ignored path="$PROJECT_DIR$/.idea/" />
@@ -32,7 +30,7 @@
       <file leaf-file-name="routingtable_test.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ptp/routingtable_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
+            <state relative-caret-position="211">
               <caret line="27" column="44" lean-forward="false" selection-start-line="27" selection-start-column="44" selection-end-line="27" selection-end-column="44" />
               <folding>
                 <element signature="e#13#41#0" expanded="true" />
@@ -41,21 +39,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="kademliaid.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/ptp/kademliaid.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1491">
-              <caret line="74" column="0" lean-forward="false" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="network.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="network.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ptp/network.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="356">
-              <caret line="30" column="26" lean-forward="false" selection-start-line="30" selection-start-column="26" selection-end-line="30" selection-end-column="26" />
+            <state relative-caret-position="377">
+              <caret line="31" column="5" lean-forward="true" selection-start-line="31" selection-start-column="5" selection-end-line="31" selection-end-column="5" />
               <folding>
                 <element signature="e#12#89#0" expanded="true" />
               </folding>
@@ -63,14 +51,24 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="protobufhandler.go" pinned="false" current-in-tab="false">
+      <file leaf-file-name="protobufhandler.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/ptp/protobufhandler.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="449">
-              <caret line="36" column="1" lean-forward="true" selection-start-line="36" selection-start-column="1" selection-end-line="36" selection-end-column="1" />
+            <state relative-caret-position="273">
+              <caret line="22" column="56" lean-forward="false" selection-start-line="22" selection-start-column="56" selection-end-line="22" selection-end-column="56" />
               <folding>
                 <element signature="e#13#81#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="protoMessages.proto" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/ptp/proto/protoMessages.proto">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="315">
+              <caret line="15" column="5" lean-forward="true" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -119,6 +117,7 @@
         <option value="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.pb.go" />
         <option value="$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto" />
         <option value="$PROJECT_DIR$/src/ptp/network.go" />
+        <option value="$PROJECT_DIR$/src/ptp/proto/protoMessages.proto" />
         <option value="$PROJECT_DIR$/src/ptp/protobufhandler.go" />
       </list>
     </option>
@@ -316,9 +315,9 @@
       <window_info id="Debug Logs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26644737" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.26644737" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Execute Anonymous" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2631579" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2631579" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21558245" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32980332" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -348,13 +347,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/ptp/routingtable.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
-          <caret line="9" column="19" lean-forward="false" selection-start-line="9" selection-start-column="19" selection-end-line="9" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ptp/contact.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1596">
@@ -685,24 +677,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ptp/kademliaid.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1491">
-          <caret line="74" column="0" lean-forward="false" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ptp/routingtable_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="27" column="44" lean-forward="false" selection-start-line="27" selection-start-column="44" selection-end-line="27" selection-end-column="44" />
-          <folding>
-            <element signature="e#13#41#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/ptp/proto/kademliaMessage.proto">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="315">
@@ -719,6 +693,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/ptp/kademliaid.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="356">
+          <caret line="74" column="0" lean-forward="false" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ptp/routingtable_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="27" column="44" lean-forward="false" selection-start-line="27" selection-start-column="44" selection-end-line="27" selection-end-column="44" />
+          <folding>
+            <element signature="e#13#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/ptp/network.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="377">
+          <caret line="31" column="5" lean-forward="true" selection-start-line="31" selection-start-column="5" selection-end-line="31" selection-end-column="5" />
+          <folding>
+            <element signature="e#12#89#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/ptp/kademlia.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
@@ -727,22 +729,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ptp/protobufhandler.go">
+    <entry file="file://$PROJECT_DIR$/src/ptp/proto/protoMessages.proto">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="449">
-          <caret line="36" column="1" lean-forward="true" selection-start-line="36" selection-start-column="1" selection-end-line="36" selection-end-column="1" />
-          <folding>
-            <element signature="e#13#81#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="315">
+          <caret line="15" column="5" lean-forward="true" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/ptp/network.go">
+    <entry file="file://$PROJECT_DIR$/src/ptp/protobufhandler.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="356">
-          <caret line="30" column="26" lean-forward="false" selection-start-line="30" selection-start-column="26" selection-end-line="30" selection-end-column="26" />
+        <state relative-caret-position="273">
+          <caret line="22" column="56" lean-forward="false" selection-start-line="22" selection-start-column="56" selection-end-line="22" selection-end-column="56" />
           <folding>
-            <element signature="e#12#89#0" expanded="true" />
+            <element signature="e#13#81#0" expanded="true" />
           </folding>
         </state>
       </provider>
