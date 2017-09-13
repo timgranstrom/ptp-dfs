@@ -20,20 +20,17 @@ func (network *Network) SendPingMessage(contact *Contact) {
 func (network *Network) SendFindContactMessage(contact *Contact) {
 	// TODO
 	probufHandler := ProtobufHandler{}
-	kadID := NewKademliaID("FFFFFFFF00000000000000000000000000000000")
-	lookupContactMessage := probufHandler.CreateLookupContactMessage(kadID)
+	lookupContactMessage := probufHandler.CreateLookupContactMessage(contact.ID)
 
 	wrapMsg := protoMessages.WrapperMessage_Msg_2{lookupContactMessage}
 
-	wrapperMessage := &protoMessages.WrapperMessage{
-		RequestId: proto.Int64(11),
-		MessageType: protoMessages.MessageType.Enum(1),
-		Messages:&wrapMsg,
-	}
-
+	wrapperMessage := probufHandler.CreateWrapperMessage(contact.ID,45,protoMessages.MessageType_FIND_CONTACT)
+	wrapperMessage.Messages = &wrapMsg
 	data,_ := proto.Marshal(wrapperMessage) //Marshal the wrapper message
 
-	probufHandler.UnMarshalWrapperMessage(data)
+	unwrappedMsg := probufHandler.UnMarshalWrapperMessage(data)
+
+	print(unwrappedMsg.SenderKademliaId)
 }
 
 func (network *Network) SendFindDataMessage(hash string) {

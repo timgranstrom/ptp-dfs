@@ -25,7 +25,20 @@ func (protobufHandler *ProtobufHandler) UnMarshalWrapperMessage(message []byte) 
  */
 
 /*
-Create a LookupContactMessage
+Create a Wrapper Message
+User still needs to add the sub-message manually after creation.
+*/
+func (protobufHandler *ProtobufHandler) CreateWrapperMessage(kademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType) *protoMessages.WrapperMessage{
+	wrapperMessage := &protoMessages.WrapperMessage{
+		SenderKademliaId: proto.String(kademliaId.String()),
+		MessageType:&messageType,
+		RequestId:proto.Int64(requestId),
+	}
+	return wrapperMessage
+}
+
+/*
+Create a Lookup Contact Message
  */
 func (protobufHandler *ProtobufHandler) CreateLookupContactMessage(kademliaId *KademliaID) *protoMessages.LookupContactMessage{
 	lookupContactMessage := &protoMessages.LookupContactMessage{
