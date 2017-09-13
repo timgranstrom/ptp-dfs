@@ -25,5 +25,15 @@ func (protobufHandler *ProtobufHandler) CreateLookupContactMessage(kademliaId *K
 	}
 	return lookupContactMessage
 }
+/*
+Create a contact in message form
+ */
+func (protobufHandler *ProtobufHandler) CreateContactMessage(kademliaId *KademliaID, address string) *protoMessages.Contact{
+	contactMessage := &protoMessages.Contact{
+		KademliaId: proto.String(kademliaId.String()),
+		Address: proto.String(address),
+	}
+	return contactMessage
+}
 
 
