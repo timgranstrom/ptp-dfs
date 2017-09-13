@@ -3,27 +3,27 @@ package ptp
 import (
 	"ptp/proto"
 	"github.com/golang/protobuf/proto"
-	"log"
-	"fmt"
+	//"log"
 )
 
 type ProtobufHandler struct{}
 
-func (protobufHandler *ProtobufHandler) UnMarshalWrapperMessage(message []byte) {
+/**
+Unmarshal a wrapper message and return the unmarshaled message
+ */
+func (protobufHandler *ProtobufHandler) UnMarshalWrapperMessage(message []byte) *protoMessages.WrapperMessage {
 	unwrappedMessage := &protoMessages.WrapperMessage{} //Create the variable to store the unwrapped result
 	proto.Unmarshal(message,unwrappedMessage)
-
-	log.Println("SUCCESS! ")
+	return unwrappedMessage
 }
-
-func (protobufHandler *ProtobufHandler) CreateLookupContactMessage() *protoMessages.FindContactMessage{
-	kadID:=NewKademliaID("hej123")
-	log.Println("TEST: ")
-	kadString := kadID.String()
-	fmt.Println(kadString) //IT WORKS, PROBLEM IS THAT IT CANNOT PRINT THIS LARGE STRING MAYBE!?
-
-	lookupContactMessage := &protoMessages.FindContactMessage{
-		KademliaTargetId: proto.String("hej"),
+/*
+Create a LookupContactMessage
+ */
+func (protobufHandler *ProtobufHandler) CreateLookupContactMessage(kademliaId *KademliaID) *protoMessages.LookupContactMessage{
+	lookupContactMessage := &protoMessages.LookupContactMessage{
+		KademliaTargetId: proto.String(kademliaId.String()),
 	}
 	return lookupContactMessage
 }
+
+

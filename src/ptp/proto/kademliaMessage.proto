@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package protoMessages;
 
-//Common header for all 4 types of messages
+//Common wrapper for all 4 types of messages
 message WrapperMessage {
 	required MessageType message_type = 1; //To know what type of message it contains
 	required int64 request_id = 2; //Id of the request the message is relevant for
@@ -10,24 +10,24 @@ message WrapperMessage {
 	optional bool is_reply = 4; //Denotes if a message is a request or a reply to a request
 	oneof messages { //Type-of-message-specific header, only one can be used
 		PingMessage msg_1 = 5;
-		FindContactMessage msg_2 = 6;
+		LookupContactMessage msg_2 = 6;
 		FindDataMessage msg_3 = 7;
 		StoreMessage msg_4 = 8;
 	}
-
+}
+    //Enum For Message Types
 	enum MessageType {
 		PING = 0;
 		FIND_CONTACT = 1;
 		FIND_DATA = 2;
 		SEND_STORE = 3;
 	}
-}
 
 //Sub-header to ping a contact
 message PingMessage { }
 
 //Sub-header to find contacts, returns a "list" of contacts
-message FindContactMessage {
+message LookupContactMessage {
 	required string kademlia_target_id = 1; //Id of target node
 	repeated Contact contacts = 2; //For replying with own closest contacts
 }
