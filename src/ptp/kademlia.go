@@ -1,18 +1,32 @@
 package ptp
 
+import (
+	"github.com/golang/protobuf/proto"
+	"ptp/proto"
+)
+
 type Kademlia struct {
 	routingTable RoutingTable
 	network Network
+	replies chan proto.Message
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	//alpha := 3 //count = alpha = 3 is standard nr.
-	//contacts := kademlia.routingTable.FindClosestContacts(target.ID,alpha)
-	//for _, element := range contacts{
-		//Start new goroutine for each contact
-		//Listen for response
-		//Each new, add the closest ones.
-	//}
+	contacts := kademlia.routingTable.FindClosestContacts(target.ID,3) //Retrieve nodes own closest contacts
+	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
+		go func() { //Send requests concurrently
+			// TODO Create and send request to contact
+		}()
+	}
+	for {
+		select {
+			case reply := <- kademlia.replies: //Idle wait for replies to requests
+				// TODO If reply has closer contacts than any in the contact list
+					// TODO Push the new closer contact, pop the furthest
+					// TODO Create and send request to new contact (in a routine)
+			// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
+		}
+	}
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
