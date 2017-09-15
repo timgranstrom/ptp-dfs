@@ -2,7 +2,7 @@ package ptp
 
 import (
 	"github.com/golang/protobuf/proto"
-	"ptp/proto"
+	//"ptp/proto"
 )
 
 type Kademlia struct {
