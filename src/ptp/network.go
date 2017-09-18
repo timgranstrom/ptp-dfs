@@ -9,6 +9,7 @@ import (
 )
 
 type Network struct {
+	protobufhandler *ProtobufHandler
 }
 
 func Listen(ip string, port int) {
@@ -21,13 +22,12 @@ func (network *Network) SendPingMessage(contact *Contact) {
 
 func (network *Network) SendFindContactMessage(contact *Contact) {
 	// TODO
-	probufHandler := ProtobufHandler{}
-	lookupContactMessage := probufHandler.CreateLookupContactMessage(contact.ID)
+	lookupContactMessage := network.protobufhandler.CreateLookupContactMessage(contact.ID)
 
-	wrapperMessage := probufHandler.CreateWrapperMessage_2(contact.ID,45,protoMessages.MessageType_FIND_CONTACT,lookupContactMessage)
+	wrapperMessage := network.protobufhandler.CreateWrapperMessage_2(contact.ID,45,protoMessages.MessageType_FIND_CONTACT,lookupContactMessage)
 
-	data := probufHandler.MarshalMessage(wrapperMessage)
-	unwrappedMsg := probufHandler.UnMarshalWrapperMessage(data)
+	data := network.protobufhandler.MarshalMessage(wrapperMessage)
+	unwrappedMsg := network.protobufhandler.UnMarshalWrapperMessage(data)
 
 	println(unwrappedMsg.SenderKademliaId)
 }
