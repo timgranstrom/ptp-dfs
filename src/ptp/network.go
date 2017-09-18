@@ -5,7 +5,7 @@ import (
 	//"net"
 	"ptp/proto"
 	//"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/proto"
+	//"github.com/golang/protobuf/proto"
 )
 
 type Network struct {
@@ -24,15 +24,12 @@ func (network *Network) SendFindContactMessage(contact *Contact) {
 	probufHandler := ProtobufHandler{}
 	lookupContactMessage := probufHandler.CreateLookupContactMessage(contact.ID)
 
-	//wrapMsg := protoMessages.WrapperMessage_Msg_2{lookupContactMessage}
+	wrapperMessage := probufHandler.CreateWrapperMessage_2(contact.ID,45,protoMessages.MessageType_FIND_CONTACT,lookupContactMessage)
 
-	wrapperMessage := probufHandler.CreateWrapperMessage(contact.ID,45,protoMessages.MessageType_FIND_CONTACT,proto.Message(lookupContactMessage))
-	//wrapperMessage.Messages = &wrapMsg
-	//data,_ := proto.Marshal(wrapperMessage) //Marshal the wrapper message
 	data := probufHandler.MarshalMessage(wrapperMessage)
 	unwrappedMsg := probufHandler.UnMarshalWrapperMessage(data)
 
-	print(unwrappedMsg.SenderKademliaId)
+	println(unwrappedMsg.SenderKademliaId)
 }
 
 func (network *Network) SendFindDataMessage(hash string) {

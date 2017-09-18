@@ -85,23 +85,62 @@ func (protobufHandler *ProtobufHandler) UnMarshalWrapperMessage(message []byte) 
  */
 
 /*
-Create a Wrapper Message
-User still needs to add the sub-message manually after creation.
+Create a Wrapper Message with ping message
 */
-func (protobufHandler *ProtobufHandler) CreateWrapperMessage(kademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message proto.Message) *protoMessages.WrapperMessage{
+func (protobufHandler *ProtobufHandler) CreateWrapperMessage_1(kademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.PingMessage) *protoMessages.WrapperMessage{
 	wrapperMessage := &protoMessages.WrapperMessage{
 		SenderKademliaId: proto.String(kademliaId.String()),
 		MessageType:&messageType,
 		RequestId:proto.Int64(requestId),
 	}
+	wrappedMsg := protoMessages.WrapperMessage_Msg_1{message}
+	wrapperMessage.Messages = &wrappedMsg
 
-	switch messageType{
-	case protoMessages.MessageType_FIND_CONTACT:
-		test := protoMessages.LookupContactMessage(message)
-		wrappedMsg := protoMessages.WrapperMessage_Msg_2{&test}
-		wrapperMessage.Messages = &wrappedMsg
-		println(messageType.String())
+	return wrapperMessage
+}
+
+/*
+Create a Wrapper Message with lookup contact message
+*/
+func (protobufHandler *ProtobufHandler) CreateWrapperMessage_2(kademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.LookupContactMessage) *protoMessages.WrapperMessage{
+	wrapperMessage := &protoMessages.WrapperMessage{
+		SenderKademliaId: proto.String(kademliaId.String()),
+		MessageType:&messageType,
+		RequestId:proto.Int64(requestId),
 	}
+	wrappedMsg := protoMessages.WrapperMessage_Msg_2{message}
+	wrapperMessage.Messages = &wrappedMsg
+
+	return wrapperMessage
+}
+
+/*
+Create a Wrapper Message with lookup data message
+*/
+func (protobufHandler *ProtobufHandler) CreateWrapperMessage_3(kademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.LookupDataMessage) *protoMessages.WrapperMessage{
+	wrapperMessage := &protoMessages.WrapperMessage{
+		SenderKademliaId: proto.String(kademliaId.String()),
+		MessageType:&messageType,
+		RequestId:proto.Int64(requestId),
+	}
+	wrappedMsg := protoMessages.WrapperMessage_Msg_3{message}
+	wrapperMessage.Messages = &wrappedMsg
+
+	return wrapperMessage
+}
+
+/*
+Create a Wrapper Message with store message
+*/
+func (protobufHandler *ProtobufHandler) CreateWrapperMessage_4(kademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.StoreMessage) *protoMessages.WrapperMessage{
+	wrapperMessage := &protoMessages.WrapperMessage{
+		SenderKademliaId: proto.String(kademliaId.String()),
+		MessageType:&messageType,
+		RequestId:proto.Int64(requestId),
+	}
+	wrappedMsg := protoMessages.WrapperMessage_Msg_4{message}
+	wrapperMessage.Messages = &wrappedMsg
+
 	return wrapperMessage
 }
 
