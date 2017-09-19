@@ -1,29 +1,27 @@
 package ptp
 
 import (
-	"github.com/golang/protobuf/proto"
+	//"github.com/golang/protobuf/proto"
+	"container/list"
 )
 
 type Kademlia struct {
 	routingTable RoutingTable
-	network Network
-	workers []Worker //List of all current workers
+	network *Network
+	workers *list.List //List of all current workers
 	idCount int //Global id counter for workers
 }
 
-type Worker struct {
-	replies chan proto.Message //Functions own channels to receive messages in
-	id int //Functions own id to attach in requests so replies can come back to the function through the dispatcher
-}
-
-func (kademlia *Kademlia) NewWorker() Worker{
-	id := kademlia.idCount
-	worker := Worker {
-		replies: make(chan proto.Message),
-		id: id,
+func NewKademlia () *Kademlia{
+	myKadID := NewRandomKademliaID() //Create a new random kademlia id
+	meContact := NewContact(myKadID,"localhost") //For now use localhost as example for IP address
+	kademlia := &Kademlia{
+		routingTable:*NewRoutingTable(meContact), //Create routing table with myself as contact
+		network: NewNetwork(), //Create a new network
+		workers: list.New(), //Create a new linked list for workers
+		idCount:0,
 	}
-	kademlia.idCount++
-	return worker
+	return kademlia
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {

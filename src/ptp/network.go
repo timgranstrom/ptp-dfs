@@ -12,6 +12,11 @@ type Network struct {
 	protobufhandler *ProtobufHandler
 }
 
+func NewNetwork() *Network{
+	network := &Network{}
+	return network
+}
+
 func Listen(ip string, port int) {
 	// TODO
 }
