@@ -1,11 +1,8 @@
 package ptp
 import (
 	//"log"
-	//"github.com/golang/protobuf/proto"
 	//"net"
 	"ptp/proto"
-	//"github.com/golang/protobuf/proto"
-	//"github.com/golang/protobuf/proto"
 )
 
 type Network struct {

@@ -25,7 +25,7 @@ func NewKademlia () *Kademlia{
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	worker := kademlia.NewWorker()
+	worker := kademlia.NewWorker(WorkerQueue)
 	contacts := kademlia.routingTable.FindClosestContacts(target.ID,3) //Retrieve nodes own closest contacts
 	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
 		go func() { //Send requests concurrently
