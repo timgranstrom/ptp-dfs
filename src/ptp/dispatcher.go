@@ -2,8 +2,8 @@ package ptp
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	"ptp/proto"
+	//"github.com/golang/protobuf/proto"
+	//"ptp/proto"
 )
 
 var WorkerQueue chan chan WorkRequest

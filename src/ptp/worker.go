@@ -1,13 +1,13 @@
 package ptp
 
 import (
-	"fmt"
+	//"fmt"
 	"time"
 	"ptp/proto"
 )
 
 type WorkRequest struct{
-	id int //Functions own id to attach in requests so replies can come back to the function through the dispatcher
+	id int64 //Functions own id to attach in requests so replies can come back to the function through the dispatcher
 	message protoMessages.WrapperMessage //Wrapper message
 }
 

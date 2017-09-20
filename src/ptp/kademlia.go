@@ -3,6 +3,7 @@ package ptp
 import (
 	//"github.com/golang/protobuf/proto"
 	"container/list"
+	"ptp/proto"
 )
 
 type Kademlia struct {
@@ -12,16 +13,29 @@ type Kademlia struct {
 	idCount int //Global id counter for workers
 }
 
-func NewKademlia () *Kademlia{
+//Create a new kademlia with random id and at a specific address
+func NewKademlia (address string) *Kademlia{
 	myKadID := NewRandomKademliaID() //Create a new random kademlia id
-	meContact := NewContact(myKadID,"localhost") //For now use localhost as example for IP address
+	meContact := NewContact(myKadID,address)
 	kademlia := &Kademlia{
 		routingTable:*NewRoutingTable(meContact), //Create routing table with myself as contact
-		network: NewNetwork(), //Create a new network
+		network: NewNetwork(address), //Create a new network
 		workers: list.New(), //Create a new linked list for workers
 		idCount:0,
 	}
 	return kademlia
+}
+
+func (kademlia *Kademlia) TestSendMsg(){
+	protobufHandler := kademlia.network.protobufhandler
+	pingMsg := protobufHandler.CreatePingMessage()
+	wrapperMsg := protobufHandler.CreateWrapperMessage_1(kademlia.routingTable.me.ID,1,protoMessages.MessageType_PING,pingMsg)
+	dataMsg := protobufHandler.MarshalMessage(wrapperMsg)
+	kademlia.network.Send(":8000",dataMsg)
+}
+
+func (kademlia *Kademlia) Run(){
+	kademlia.network.Listen() //Start listener on network
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
@@ -35,8 +49,8 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	}
 	for {
 		select {
-			case reply := <- worker.replies: //Idle wait for replies to requests
-				print(reply.String()) //Just temporary to avoid errors when compiling
+			case reply := <- worker.workRequest: //Idle wait for replies to requests
+				print(reply.id) //Just temporary to avoid errors when compiling
 
 				// TODO If reply has closer contacts than any in the contact list
 					// TODO Push the new closer contact, pop the furthest
@@ -51,7 +65,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
-	worker := kademlia.NewWorker()
+	worker := kademlia.NewWorker(WorkerQueue)
 	contacts := kademlia.routingTable.FindClosestContacts(NewKademliaID(hash),3) //Retrieve nodes own closest contacts
 	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
 		go func() { //Send requests concurrently
@@ -61,8 +75,8 @@ func (kademlia *Kademlia) LookupData(hash string) {
 	}
 	for {
 		select {
-			case reply := <- worker.replies: //Idle wait for replies to requests
-				print(reply.String()) //Just temporary to avoid errors when compiling
+			case reply := <- worker.workRequest: //Idle wait for replies to requests
+				print(reply.id) //Just temporary to avoid errors when compiling
 				// TODO If reply has address of data
 					// TODO Download data
 					// TODO Create and send store request to next closest node
@@ -77,7 +91,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 }
 
 func (kademlia *Kademlia) Store(data []byte) {
-	worker := kademlia.NewWorker()
+	worker := kademlia.NewWorker(WorkerQueue)
 	contacts := kademlia.routingTable.FindClosestContacts(NewKademliaID(string(data)),3) //Retrieve nodes own closest contacts
 	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
 		go func() { //Send requests concurrently
@@ -87,8 +101,8 @@ func (kademlia *Kademlia) Store(data []byte) {
 	}
 	for {
 		select {
-			case reply := <- worker.replies: //Idle wait for replies to requests
-				print(reply.String()) //Just temporary to avoid errors when compiling
+			case reply := <- worker.workRequest: //Idle wait for replies to requests
+				print(reply.id) //Just temporary to avoid errors when compiling
 				// TODO If reply has closer contacts than any in the contact list
 					// TODO Push the new closer contact, pop the furthest
 					// TODO Goroutine to create and send request to new contact

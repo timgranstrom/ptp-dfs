@@ -3,13 +3,10 @@ package ptp
 import (
 	"net/http"
 	"fmt"
-	"time"
-	"github.com/golang/protobuf/proto"
-	"ptp/proto"
 )
 
 // A buffered channel that we can send work requests on.
-var WorkQueue = make(chan WorkRequest, 100)
+//var WorkQueue = make(chan WorkRequest, 100)
 
 func Collector(w http.ResponseWriter, r *http.Request) {
 	// Make sure we can only be called with an HTTP POST request.
@@ -18,7 +15,6 @@ func Collector(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-
 	// Parse the delay.
 	/*delay, err := time.ParseDuration(r.FormValue("delay"))
 	if err != nil {
@@ -40,7 +36,7 @@ func Collector(w http.ResponseWriter, r *http.Request) {
 	//work := WorkRequest{Name: name, Delay: delay}
 
 	// Push the work onto the queue.
-	WorkQueue <- work
+	//WorkQueue <- work
 	fmt.Println("Work request queued")
 
 	// And let the user know their work request was created.
