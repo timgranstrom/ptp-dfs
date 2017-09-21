@@ -13,18 +13,17 @@ type WorkRequest struct{
 
 type Worker struct {
 	workRequest chan WorkRequest //Functions own channels to receive messages in (this is work)
-	id int //Functions own id to attach in requests so replies can come back to the function through the dispatcher
-	WorkerQueue chan chan WorkRequest //Queue with workers
+	id int64 //Functions own id to attach in requests so replies can come back to the function through the dispatcher
+	//WorkerQueue chan chan WorkRequest //Queue with workers
 	timeoutDelay time.Duration //Time before the work times out
 }
 
 //Create a new worker and give it the Worker queue from the dispatcher
-func (kademlia *Kademlia) NewWorker(workerQueue chan chan WorkRequest) Worker{
+func (kademlia *Kademlia) NewWorker() Worker{
 	id := kademlia.idCount
 	worker := Worker {
 		workRequest: make(chan WorkRequest),
 		id: id,
-		WorkerQueue: workerQueue,
 		timeoutDelay: 10, //10 seconds before timeout on the entire function (stops listening for answer)
 	}
 	kademlia.idCount++

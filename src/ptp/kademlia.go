@@ -39,9 +39,15 @@ func (kademlia *Kademlia) Run(){
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	worker := kademlia.NewWorker(WorkerQueue)
-	contacts := kademlia.routingTable.FindClosestContacts(target.ID,3) //Retrieve nodes own closest contacts
-	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
+	workRecievedCount := 0
+	expectedWorkCount := 0
+
+	worker := kademlia.NewWorker()
+	WorkerQueue <- worker
+	contacts := ContactCandidates{}
+	contacts.Append(kademlia.routingTable.FindClosestContacts(target.ID,3)) //Retrieve nodes own closest contacts
+
+	for _, contact := range contacts.contacts { //Send request to nodes own closests contacts for their closests contacts
 		go func() { //Send requests concurrently
 		print(contact.Address) //Just temporary to avoid errors when compiling
 			// TODO Create and send lookupcontact request to contact
@@ -50,8 +56,18 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	for {
 		select {
 			case reply := <- worker.workRequest: //Idle wait for replies to requests
-				print(reply.id) //Just temporary to avoid errors when compiling
-
+				workRecievedCount++ //increment received work counter when received reply
+				if workRecievedCount < expectedWorkCount{
+					WorkerQueue <- worker
+				}
+				replyContactsProto := reply.message.GetMsg_2().Contacts
+				replyContacts := []Contact{}
+				for _, replyContact := range replyContactsProto{
+					replyKademlia := NewKademliaID(*replyContact.KademliaId) //Create kademliaId from reply
+					replyContact := NewContact(replyKademlia,*replyContact.Address) //Create contact from reply
+					replyContacts = append(replyContacts, replyContact) //Append reply contacts into a list
+				}
+				contacts.Append(replyContacts) //Add replied contacts to the contact candidate list //FIX DUPLICATES
 				// TODO If reply has closer contacts than any in the contact list
 					// TODO Push the new closer contact, pop the furthest
 					// TODO If it was last reply

@@ -9,6 +9,7 @@ import (
 )
 
 // A buffered channel that we can send work requests on.
+
 var WorkQueue = make(chan WorkRequest, 100)
 
 type Network struct {
