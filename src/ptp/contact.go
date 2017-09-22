@@ -47,6 +47,62 @@ type ContactCandidates struct {
 }
 
 /**
+* Append 2 lists together, sort them, keep only the "maxSize" closest contacts
+  return the new contacts that "made the cut" and didn't already exist
+ */
+func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, maxSize int) []Contact {
+	duplicates := candidates.AppendNonDuplicates(contacts) //Merge lists together without duplicates, get back the duplicates
+	candidates.Sort()
+	//Remove candidates if they are beyond the maxSize index
+	cutCandidates := []Contact{}
+	for i,elem := range candidates.contacts{
+		if i+1<maxSize{
+			cutCandidates = append(cutCandidates, elem)
+		}
+	}
+	candidates.contacts = cutCandidates //assign the candidates that made the cut.
+
+	//Find contacts that didn't already exist
+	addedContacts := []Contact{} //new Contacts that were added in the append
+	for _,existingElem := range candidates.contacts{
+		duplicate := false
+		for _, dupElem := range duplicates{ //Check if the contact was added or if it already existed
+			if dupElem == existingElem{
+				duplicate = true
+				break
+			}
+		}
+		if !duplicate{
+			addedContacts = append(addedContacts, existingElem) //add contact as new if it didn't already exist
+		}
+	}
+	return addedContacts
+}
+
+//Append contacts without duplicates
+//Returns the duplicates
+func (candidates *ContactCandidates) AppendNonDuplicates(contacts []Contact) []Contact{
+	nonDupNewContacts := []Contact{}
+	duplicateContacts := []Contact{}
+	for _,elem := range contacts{
+		exist := false
+		for _, existingElem := range candidates.contacts{
+			if elem == existingElem {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			nonDupNewContacts = append(nonDupNewContacts, elem)
+		}else{
+			duplicateContacts = append(duplicateContacts,elem)
+		}
+	}
+	candidates.contacts = nonDupNewContacts
+	return duplicateContacts
+}
+
+/**
 * Append 2 lists together
  */
 func (candidates *ContactCandidates) Append(contacts []Contact) {
