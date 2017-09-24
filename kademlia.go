@@ -47,7 +47,7 @@ func (kademlia *Kademlia) TestGetMeContact() *Contact{
 func (kademlia *Kademlia) Run(){
 	go kademlia.network.Listen() //Start listener on network
 	dispatcher := NewDispatcher(kademlia.network)
-	go dispatcher.StartDispatcher(10)
+	dispatcher.StartDispatcher(10) //always run
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
