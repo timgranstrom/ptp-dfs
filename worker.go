@@ -3,7 +3,7 @@ package ptp
 import (
 	//"fmt"
 	"time"
-	"ptp/proto"
+	"github.com/timgranstrom/ptp-dfs/protoMessages"
 )
 
 type WorkRequest struct{

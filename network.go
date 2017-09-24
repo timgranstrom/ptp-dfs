@@ -1,6 +1,6 @@
 package ptp
 import (
-	"ptp/proto"
+	"github.com/timgranstrom/ptp-dfs/protoMessages"
 	"fmt"
 	"os"
 	"net"

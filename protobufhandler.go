@@ -1,7 +1,7 @@
 package ptp
 
 import (
-	"ptp/proto"
+	"github.com/timgranstrom/ptp-dfs/protoMessages"
 	"github.com/golang/protobuf/proto"
 	//"log"
 	"log"

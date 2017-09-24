@@ -1,12 +1,9 @@
 package ptp
 
 import (
-	//"fmt"
-	//"github.com/golang/protobuf/proto"
-	//"ptp/proto"
 	"log"
 	"strconv"
-	"ptp/proto"
+	"github.com/timgranstrom/ptp-dfs/protoMessages"
 )
 
 type Dispatcher struct{

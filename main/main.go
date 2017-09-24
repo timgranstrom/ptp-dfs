@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ptp"
+	"github.com/timgranstrom/ptp-dfs"
 	"time"
 )
 
