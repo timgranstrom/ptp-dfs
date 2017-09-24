@@ -25,6 +25,5 @@ func TestProtobufMessageMarshal(t *testing.T) {
 	contact := NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000")
 	//rt := NewRoutingTable(contact)
 	network := Network{}
-	network.SendFindContactMessage(&contact)
-
+	network.SendFindContactMessage(&contact,1)
 }
