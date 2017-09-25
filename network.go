@@ -43,7 +43,7 @@ func SetupUDPListener(address string) *net.UDPConn{
 
 	/* Now listen at selected port */
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
-	log.Println("Connection Established at "+ServerAddr.IP.String()+":"+strconv.Itoa(ServerAddr.Port))
+	log.Println(address+": Connection Established at "+ServerAddr.IP.String()+":"+strconv.Itoa(ServerAddr.Port))
 	CheckError(err)
 	return ServerConn
 }
@@ -80,7 +80,7 @@ func (network *Network) Listen() {
 
 func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr,err error){
 	msg := network.protobufhandler.UnMarshalWrapperMessage(bufferMsg)
-	log.Println("Received ",msg.MessageType.String(), " from ",addr)
+	log.Println(network.routingTable.me.Address+" :Received ",msg.MessageType.String(), " from ",addr)
 
 	if err != nil {
 		fmt.Println("Error: ",err)
@@ -90,7 +90,7 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 
 	//Push the work onto the queue.
 	network.WorkQueue <- work
-	log.Println("Work request queued")
+	log.Println(network.routingTable.me.Address+": Work request queued")
 }
 
 func (network *Network) SendPingMessage(contact *Contact) {
@@ -107,7 +107,7 @@ func (network *Network) SendFindContactMessage(contact *Contact, requestId int64
 	data := network.protobufhandler.MarshalMessage(wrapperMessage) //Marshal the message for network transport
 
 	network.Send(contact.Address,data) //Send Message to target address
-	log.Println("Sent Find Contact Message to "+contact.Address)
+	log.Println(network.routingTable.me.Address+" :Sent Find Contact Message to "+contact.Address)
 
 	//unwrappedMsg := network.protobufhandler.UnMarshalWrapperMessage(data)
 
@@ -124,7 +124,7 @@ func (network *Network) SendStoreMessage(data []byte) {
 
 //TODO FIX THIS
 func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
-	log.Println("RECIEVED FIND CONTACT MESSAGE REQUEST")
+	log.Println(network.routingTable.me.Address+" :RECIEVED FIND CONTACT MESSAGE REQUEST")
 	//targetKadId := NewKademliaID(*workRequest.message.GetMsg_2().KademliaTargetId)
 	//contacts := network.routingTable.FindClosestContacts(targetKadId,3)
 	//lookupContactMsg := network.protobufhandler.CreateLookupContactMessage(targetKadId)
