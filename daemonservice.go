@@ -76,14 +76,14 @@ func (ds *DaemonService) Start(name string, port string){
 		kademliaListenPort = defaultKademliaPort
 	}
 
-	kademliaInstance1 := NewKademlia(":8000")
-	kademliaInstance1.routingTable.AddContact(NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"),":8000"))
+	//kademliaInstance1 := NewKademlia(":8000")
+	//kademliaInstance1.routingTable.AddContact(NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"),":8000"))
 	//kademliaInstance2 := NewKademlia(":8003")
 
-	go kademliaInstance1.Run()
+	//go kademliaInstance1.Run()
 	//kademliaInstance2.Run()
 	//time.Sleep(time.Second)
-	go kademliaInstance1.TestSendMsg(kademliaInstance1.TestGetMeContact())
+	//go kademliaInstance1.TestSendMsg(kademliaInstance1.TestGetMeContact())
 
 }
 

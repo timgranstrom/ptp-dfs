@@ -12,10 +12,11 @@ type Kademlia struct {
 	network *Network
 	workers *list.List //List of all current workers
 	idCount int64 //Global id counter for workers
+	boostrapNode *Contact //boostrap node to get you into the network
 }
 
 //Create a new kademlia with random id and at a specific address
-func NewKademlia (address string) *Kademlia{
+func NewKademlia (address string, bootstrapNode *Contact) *Kademlia{
 	myKadID := NewRandomKademliaID() //Create a new random kademlia id
 	meContact := NewContact(myKadID,address)
 	routingTable := *NewRoutingTable(meContact)
@@ -25,29 +26,22 @@ func NewKademlia (address string) *Kademlia{
 		workers: list.New(), //Create a new linked list for workers
 		idCount:0,
 	}
+	if bootstrapNode != nil {
+		kademlia.routingTable.AddContact(*bootstrapNode) //Add boostrap node in network
+		log.Println(kademlia.routingTable.me.Address+": Added boostrap node as contact")
+	}
 	return kademlia
-}
-
-func (kademlia *Kademlia) TestSendMsg(target *Contact){
-	kademlia.LookupContact(target)
-	//protobufHandler := kademlia.network.protobufhandler
-	//pingMsg := protobufHandler.CreatePingMessage()
-	//wrapperMsg := protobufHandler.CreateWrapperMessage_1(kademlia.routingTable.me.ID,1,protoMessages.MessageType_PING,pingMsg,false)
-	//dataMsg := protobufHandler.MarshalMessage(wrapperMsg)
-	//kademlia.network.Send(":8000",dataMsg)
-}
-func (kademlia *Kademlia) TestAddContact(contact Contact){
-	log.Println("Added new contact")
-	kademlia.routingTable.AddContact(contact)
-}
-func (kademlia *Kademlia) TestGetMeContact() *Contact{
-	return &kademlia.routingTable.me
 }
 
 func (kademlia *Kademlia) Run(){
 	go kademlia.network.Listen() //Start listener on network
 	dispatcher := NewDispatcher(kademlia.network)
-	dispatcher.StartDispatcher(10) //always run
+	go dispatcher.StartDispatcher() //always run
+	kademlia.BoostrapProcess()
+}
+
+func (kademlia *Kademlia) BoostrapProcess(){
+	go kademlia.LookupContact(&kademlia.routingTable.me) //Find closest nodes to me in network
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {

@@ -6,17 +6,18 @@ import (
 )
 
 func TestRunKademliaInstances(t *testing.T){
-	kademliaInstance1 := NewKademlia(":8001")
-	kademliaInstance2 := NewKademlia(":8002")
-	kademliaInstance3 := NewKademlia(":8003")
-	kademliaInstance3.TestAddContact(*kademliaInstance2.TestGetMeContact())
-	kademliaInstance2.TestAddContact(*kademliaInstance1.TestGetMeContact())
-
-	kademliaInstance1.Run()
-	kademliaInstance2.Run()
-	kademliaInstance3.Run()
+	//Create nodes
+	node1 := NewKademlia(":8001",nil) //Original node
+	node2 := NewKademlia(":8002",&node1.routingTable.me) //boostrap on node1
+	node3 := NewKademlia(":8003", &node2.routingTable.me) //boostrap on node2
+	//Run nodes
+	node1.Run()
+	node2.Run()
+	node3.Run()
 	time.Sleep(time.Second)
-	go kademliaInstance3.TestSendMsg(kademliaInstance1.TestGetMeContact())
+
+	//Try and find node1 through the network
+	go node3.LookupContact(&node1.routingTable.me)
 
 	time.Sleep(time.Second)
 }
