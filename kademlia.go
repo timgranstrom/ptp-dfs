@@ -45,6 +45,8 @@ func (kademlia *Kademlia) BoostrapProcess(){
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
+	log.Println(kademlia.routingTable.me.Address+" :Lookup Contact was called internally")
+
 	workRecievedCount := 0
 	expectedWorkCount := 0
 

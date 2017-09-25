@@ -86,7 +86,7 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 		fmt.Println("Error: ",err)
 	}
 	//Now, we take the delay, and the person's name, and make a WorkRequest out of them.
-	work := WorkRequest{*msg.RequestId,*msg}
+	work := WorkRequest{*msg.RequestId,*msg,addr.String()}
 
 	//Push the work onto the queue.
 	network.WorkQueue <- work
@@ -122,14 +122,20 @@ func (network *Network) SendStoreMessage(data []byte) {
 	// TODO
 }
 
-//TODO FIX THIS
+//RENAME "PROTOCONTACT" TO PROTOCONTACT INSTEAD OF CONTACT
 func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 	log.Println(network.routingTable.me.Address+" :RECIEVED FIND CONTACT MESSAGE REQUEST")
-	//targetKadId := NewKademliaID(*workRequest.message.GetMsg_2().KademliaTargetId)
-	//contacts := network.routingTable.FindClosestContacts(targetKadId,3)
-	//lookupContactMsg := network.protobufhandler.CreateLookupContactMessage(targetKadId)
-	/*for _,elem := range contacts{
-		lookupContactMsg.Contacts = append(lookupContactMsg.Contacts, elem)
-	}*/
-	//lookupContactMsg.Contacts = contacts
+	targetKadId := NewKademliaID(*workRequest.message.GetMsg_2().KademliaTargetId)
+	contacts := network.routingTable.FindClosestContacts(targetKadId,3)
+	lookupContactMsg := network.protobufhandler.CreateLookupContactMessage(targetKadId)
+
+	for _,elem := range contacts{
+		protoContact := network.protobufhandler.CreateContactMessage(elem.ID,elem.Address)
+		lookupContactMsg.Contacts = append(lookupContactMsg.Contacts, protoContact)
+	}
+
+	wrapperMsg := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,workRequest.id,protoMessages.MessageType_FIND_CONTACT, lookupContactMsg,true)
+	marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg)
+	log.Println(network.routingTable.me.Address+" :Sending response to "+workRequest.senderAddress)
+	network.Send(workRequest.senderAddress,marshaledMsg)
 }

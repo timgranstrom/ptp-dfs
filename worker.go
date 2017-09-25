@@ -9,6 +9,7 @@ import (
 type WorkRequest struct{
 	id int64 //Functions own id to attach in requests so replies can come back to the function through the dispatcher
 	message protoMessages.WrapperMessage //Wrapper message
+	senderAddress string //address message was recieved from
 }
 
 type Worker struct {
