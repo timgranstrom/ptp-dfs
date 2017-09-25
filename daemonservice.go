@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"flag"
-	"time"
 )
 
 const (

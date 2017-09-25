@@ -16,11 +16,10 @@ func NewDispatcher(network *Network) *Dispatcher{
 }
 
 
-var WorkerQueue chan Worker
 
 func (dispatcher *Dispatcher) StartDispatcher(nworkers int) {
 	// First, initialize the channel we are going to but the workers' work channels into.
-	WorkerQueue = make(chan Worker, nworkers)
+	//WorkerQueue = make(chan Worker, nworkers)
 
 	// Now, create all of our workers. NOT NECESSARY
 	/*for i := 0; i<nworkers; i++ {
@@ -32,18 +31,18 @@ func (dispatcher *Dispatcher) StartDispatcher(nworkers int) {
 	go func() { //New GoRoutine
 		for {
 			select {
-			case work := <-WorkQueue:
+			case work := <-dispatcher.network.WorkQueue:
 				log.Println("Received work requeust")
 				go func() { //New GoRoutine
 					if *work.message.IsReply {
 						for { //Always try to find the correct worker until Timeout or success
-							worker := <-WorkerQueue
+							worker := <-dispatcher.network.WorkerQueue
 							if worker.id == work.id { //If worker and work id match, SUCCESS!
 								log.Println("Dispatching work request for " + strconv.Itoa(int(work.id)))
 								worker.workRequest <- work //Dispatch to the correct worker instead (not correct now)
 								break
 							} else {
-								WorkerQueue <- worker //Add worker back to queue if it was the wrong worker
+								dispatcher.network.WorkerQueue <- worker //Add worker back to queue if it was the wrong worker
 							}
 						}
 					} else{
@@ -65,7 +64,6 @@ func (dispatcher *Dispatcher) StartDispatcher(nworkers int) {
 							log.Println("Picked up UNKNOWN MESSAGE TYPE from Message Queue")
 						}
 					}
-
 				}()
 			}
 		}

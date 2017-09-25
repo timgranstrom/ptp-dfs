@@ -10,15 +10,19 @@ import (
 
 // A buffered channel that we can send work requests on.
 
-var WorkQueue = make(chan WorkRequest, 100)
+//var WorkQueue = make(chan WorkRequest, 100)
 
 type Network struct {
 	protobufhandler *ProtobufHandler
 	routingTable RoutingTable
+	WorkerQueue chan Worker
+	WorkQueue chan WorkRequest
 }
 
 func NewNetwork(routingTable RoutingTable) *Network{
-	network := &Network{routingTable:routingTable}
+	network := &Network{routingTable:routingTable,
+			WorkerQueue: make(chan Worker,100),
+			WorkQueue:make(chan WorkRequest,100)}
 	return network
 }
 
@@ -85,7 +89,7 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 	work := WorkRequest{*msg.RequestId,*msg}
 
 	//Push the work onto the queue.
-	WorkQueue <- work
+	network.WorkQueue <- work
 	log.Println("Work request queued")
 }
 

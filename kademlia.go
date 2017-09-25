@@ -55,7 +55,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	expectedWorkCount := 0
 
 	worker := kademlia.NewWorker() //Create a worker that maps to the function
-	WorkerQueue <- worker //add the worker to the worker queue so that we can recieve messages
+	kademlia.network.WorkerQueue <- worker //add the worker to the worker queue so that we can recieve messages
 	contacts := ContactCandidates{} //closes contact candidates for the lookup
 	contacts.Append(kademlia.routingTable.FindClosestContacts(target.ID,3)) //Retrieve nodes own closest contacts
 
@@ -72,7 +72,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 			case reply := <- worker.workRequest: //Idle wait for replies to requests
 				workRecievedCount++ //increment received work counter when received reply
 				if workRecievedCount < expectedWorkCount{
-					WorkerQueue <- worker //If we still expect more answers, re-add worker to queue
+					kademlia.network.WorkerQueue <- worker //If we still expect more answers, re-add worker to queue
 				}
 				replyContactsProto := reply.message.GetMsg_2().Contacts //Get the Contact Proto message from the reply
 				//Convert protbuf contact to kademlia contact
