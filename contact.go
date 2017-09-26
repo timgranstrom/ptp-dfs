@@ -53,6 +53,7 @@ type ContactCandidates struct {
 func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, maxSize int) []Contact {
 	duplicates := candidates.AppendNonDuplicates(contacts) //Merge lists together without duplicates, get back the duplicates
 	candidates.Sort()
+
 	//Remove candidates if they are beyond the maxSize index
 	cutCandidates := []Contact{}
 	for i,elem := range candidates.contacts{

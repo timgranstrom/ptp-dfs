@@ -5,6 +5,7 @@ import (
 	"container/list"
 	//"ptp/proto"
 	"log"
+	"time"
 )
 
 type Kademlia struct {
@@ -27,71 +28,100 @@ func NewKademlia (address string, bootstrapNode *Contact) *Kademlia{
 		idCount:0,
 	}
 	if bootstrapNode != nil {
+		log.Println(kademlia.routingTable.me.Address+": Add boostrap node as contact")
 		kademlia.routingTable.AddContact(*bootstrapNode) //Add boostrap node in network
-		log.Println(kademlia.routingTable.me.Address+": Added boostrap node as contact")
 	}
 	return kademlia
 }
 
 func (kademlia *Kademlia) Run(){
+	println("\n---------------")
+	log.Println(kademlia.network.routingTable.me.Address,": NODE STARTED")
 	go kademlia.network.Listen() //Start listener on network
+	go kademlia.network.Sender() //Start the sender on network
 	dispatcher := NewDispatcher(kademlia.network)
-	go dispatcher.StartDispatcher() //always run
-	kademlia.BoostrapProcess()
+	dispatcher.StartDispatcher() //always run
+
+	go kademlia.BoostrapProcess()
+
 }
 
 func (kademlia *Kademlia) BoostrapProcess(){
-	go kademlia.LookupContact(&kademlia.routingTable.me) //Find closest nodes to me in network
+	for {
+		if !kademlia.network.listenerActive {
+			time.Sleep(time.Second / 10)
+		} else{
+			break
+		}
+	}
+	log.Println(kademlia.network.routingTable.me.Address,"###########Bootstrapping process###########")
+	kademlia.LookupContact(&kademlia.routingTable.me) //Find closest nodes to me in network
+	log.Println(kademlia.network.routingTable.me.Address,"###########Finished Bootstrapping process###########")
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	log.Println(kademlia.routingTable.me.Address+" :Lookup Contact was called internally")
 
 	workRecievedCount := 0
 	expectedWorkCount := 0
 
 	worker := kademlia.NewWorker() //Create a worker that maps to the function
+	log.Println(kademlia.routingTable.me.Address+" :[Lookup Contact] was called internally, ID: ",worker.id)
 	kademlia.network.WorkerQueue <- worker //add the worker to the worker queue so that we can recieve messages
 	contacts := ContactCandidates{} //closes contact candidates for the lookup
 	contacts.Append(kademlia.routingTable.FindClosestContacts(target.ID,3)) //Retrieve nodes own closest contacts
 
+	log.Println(kademlia.routingTable.me.Address,":LIST OF CLOSEST CONTACTS INTERNALLY TO ",target.Address)
+
 	for _, contact := range contacts.contacts { //Send request to nodes own closests contacts for their closests contacts
-		//go func() { //Send requests concurrently
-		//print(contact.Address) //Just temporary to avoid errors when compiling
-
-			// TODO Create and send lookupcontact request to contact
-		//}()
-		go kademlia.network.SendFindContactMessage(&contact,worker.id) //Create and send lookupcontact request to contact
+		log.Println(kademlia.routingTable.me.Address,":",contact.Address)
+		expectedWorkCount++
+		go kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Create and send lookupcontact request to contact
 	}
-	for {
-		select {
-			case reply := <- worker.workRequest: //Idle wait for replies to requests
-				workRecievedCount++ //increment received work counter when received reply
-				if workRecievedCount < expectedWorkCount{
-					kademlia.network.WorkerQueue <- worker //If we still expect more answers, re-add worker to queue
-				}
-				replyContactsProto := reply.message.GetMsg_2().Contacts //Get the Contact Proto message from the reply
-				//Convert protbuf contact to kademlia contact
-				replyContacts := []Contact{}
-				for _, replyContact := range replyContactsProto{
-					replyKademlia := NewKademliaID(*replyContact.KademliaId) //Create kademliaId from reply
-					replyContact := NewContact(replyKademlia,*replyContact.Address) //Create contact from reply
-					replyContacts = append(replyContacts, replyContact) //Append reply contacts into a list
-				}
-				addedContacts := contacts.AppendClosestContacts(replyContacts,3) //Add replied contacts to the contact candidate list
+	log.Println(kademlia.routingTable.me.Address,":FINISHED LIST OF CLOSEST CONTACTS INTERNALLY")
 
-				for _,contact := range addedContacts{
-					go kademlia.network.SendFindContactMessage(&contact,worker.id) //Fire off a new find contact request for each contact
+lookForRepliesChannel:
+		for {
+			select {
+				case reply := <- worker.workRequest: //Idle wait for replies to requests
+					workRecievedCount++ //increment received work counter when received reply
+					if workRecievedCount < expectedWorkCount{
+						kademlia.network.WorkerQueue <- worker //If we still expect more answers, re-add worker to queue
+					}
+					replyContactsProto := reply.message.GetMsg_2().Contacts //Get the Contact Proto message from the reply
+					//Convert protbuf contact to kademlia contact
+					replyContacts := []Contact{}
+					for _, replyContact := range replyContactsProto{
+						if *replyContact.KademliaId != kademlia.network.routingTable.me.ID.String(){
+							replyKademlia := NewKademliaID(*replyContact.KademliaId) //Create kademliaId from reply
+							replyContact := NewContact(replyKademlia,*replyContact.Address) //Create contact from reply
+							replyContacts = append(replyContacts, replyContact) //Append reply contacts into a list
+						}else{
+							log.Println(kademlia.routingTable.me.Address,":Filtered from sending [Find Contact] message to self")
+						}
+					}
+					newContacts := contacts.AppendClosestContacts(replyContacts,3) //Add replied contacts to the contact candidate list
+
+					for _,contact := range newContacts{
+						go kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Fire off a new find contact request for each contact
+						expectedWorkCount++
+						}
+					// TODO If reply has closer contacts than any in the contact list
+						// TODO Push the new closer contact, pop the furthest
+						// TODO If it was last reply
+							// TODO Close the loop
+						// TODO Goroutine to create and send request to new contact
+				// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
+					// TODO Close the loop
+			default:
+				if workRecievedCount == expectedWorkCount{
+					break lookForRepliesChannel
 				}
-				// TODO If reply has closer contacts than any in the contact list
-					// TODO Push the new closer contact, pop the furthest
-					// TODO If it was last reply
-						// TODO Close the loop
-					// TODO Goroutine to create and send request to new contact
-			// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
-				// TODO Close the loop
+
+			}
+
 		}
-	}
+	log.Println(kademlia.routingTable.me.Address,": Finished [Find Contact]\n")
+
 	// TODO Return closest contacts
 }
 

@@ -2,7 +2,6 @@ package ptp
 
 import (
 	"log"
-	"strconv"
 	"github.com/timgranstrom/ptp-dfs/protoMessages"
 )
 
@@ -32,13 +31,16 @@ func (dispatcher *Dispatcher) StartDispatcher() {
 		for {
 			select {
 			case work := <-dispatcher.network.WorkQueue:
+
 				log.Println(dispatcher.network.routingTable.me.Address,": Received work request, is reply:",*work.message.IsReply)
 				go func() { //New GoRoutine
 					if *work.message.IsReply {
 						for { //Always try to find the correct worker until Timeout or success
 							worker := <-dispatcher.network.WorkerQueue
+							log.Println(dispatcher.network.routingTable.me.Address,": WORKER RECIEVED WITH ID",worker.id)
+
 							if worker.id == work.id { //If worker and work id match, SUCCESS!
-								log.Println(dispatcher.network.routingTable.me.Address,": Dispatching work request for " + strconv.Itoa(int(work.id)))
+								log.Println(dispatcher.network.routingTable.me.Address,": Dispatching work request for worker ID ",work.id)
 								worker.workRequest <- work //Dispatch to the correct worker instead (not correct now)
 								break
 							} else {

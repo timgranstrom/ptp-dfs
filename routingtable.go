@@ -1,5 +1,7 @@
 package ptp
 
+import "log"
+
 const bucketSize = 20 //contains a k number of nodes.
 
 /**
@@ -27,6 +29,7 @@ func NewRoutingTable(me Contact) *RoutingTable {
 * Adds a Contact (contact) to a routing table
  */
 func (routingTable *RoutingTable) AddContact(contact Contact) {
+	log.Println(routingTable.me.Address+": UPDATING routingtable with ",contact.Address)
 	bucketIndex := routingTable.getBucketIndex(contact.ID) //Get bucket index for contact in routingTable.
 	bucket := routingTable.buckets[bucketIndex] //Get the bucket.
 	bucket.AddContact(contact) //Add the contact to the bucket.
