@@ -60,13 +60,14 @@ func (kademlia *Kademlia) BoostrapProcess(){
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-
 	workRecievedCount := 0
 	expectedWorkCount := 0
 
 	worker := kademlia.NewWorker() //Create a worker that maps to the function
 	log.Println(kademlia.routingTable.me.Address+" :[Lookup Contact] was called internally, ID: ",worker.id)
+
 	kademlia.network.WorkerQueue <- worker //add the worker to the worker queue so that we can recieve messages
+
 	contacts := ContactCandidates{} //closes contact candidates for the lookup
 	contacts.Append(kademlia.routingTable.FindClosestContacts(target.ID,3)) //Retrieve nodes own closest contacts
 
@@ -84,9 +85,8 @@ lookForRepliesChannel:
 			select {
 				case reply := <- worker.workRequest: //Idle wait for replies to requests
 					workRecievedCount++ //increment received work counter when received reply
-					if workRecievedCount < expectedWorkCount{
-						kademlia.network.WorkerQueue <- worker //If we still expect more answers, re-add worker to queue
-					}
+					log.Println(kademlia.routingTable.me.Address,":&&&&&&&&&&& Work received count:",workRecievedCount)
+
 					replyContactsProto := reply.message.GetMsg_2().Contacts //Get the Contact Proto message from the reply
 					//Convert protbuf contact to kademlia contact
 					replyContacts := []Contact{}
@@ -99,12 +99,38 @@ lookForRepliesChannel:
 							log.Println(kademlia.routingTable.me.Address,":Filtered from sending [Find Contact] message to self")
 						}
 					}
+
+					println("CURRENT CONTACTS:\n")
+					for _, elem := range contacts.contacts{
+						println(elem.Address)
+					}
+					println("POSSIBLE NEW CONTACTS:\n")
+					for _, elem := range replyContacts{
+						println(elem.Address)
+					}
+
 					newContacts := contacts.AppendClosestContacts(replyContacts,3) //Add replied contacts to the contact candidate list
 
+					println("NEW CONTACTS")
+					for _,elem := range newContacts{
+						println(elem.Address)
+					}
+					println("ALL CONTACTS")
+					for _,elem := range contacts.contacts{
+						println(elem.Address)
+					}
+
 					for _,contact := range newContacts{
-						go kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Fire off a new find contact request for each contact
 						expectedWorkCount++
+						go kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Fire off a new find contact request for each contact
 						}
+
+					log.Println(kademlia.routingTable.me.Address,":&&&&&&&&&&& Work expected count:",expectedWorkCount)
+
+					if workRecievedCount < expectedWorkCount{
+						log.Println(kademlia.routingTable.me.Address,":!!!!!!! ADDED worker back to queue, ID: ",worker.id)
+						kademlia.network.WorkerQueue <- worker //If we still expect more answers, re-add worker to queue
+					}
 					// TODO If reply has closer contacts than any in the contact list
 						// TODO Push the new closer contact, pop the furthest
 						// TODO If it was last reply
@@ -118,7 +144,6 @@ lookForRepliesChannel:
 				}
 
 			}
-
 		}
 	log.Println(kademlia.routingTable.me.Address,": Finished [Find Contact]\n")
 

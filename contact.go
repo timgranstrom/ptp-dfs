@@ -51,9 +51,12 @@ type ContactCandidates struct {
   return the new contacts that "made the cut" and didn't already exist
  */
 func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, maxSize int) []Contact {
+	if len(contacts) == 0{
+		return []Contact{}
+	}
 	duplicates := candidates.AppendNonDuplicates(contacts) //Merge lists together without duplicates, get back the duplicates
-	candidates.Sort()
 
+	candidates.Sort()
 	//Remove candidates if they are beyond the maxSize index
 	cutCandidates := []Contact{}
 	for i,elem := range candidates.contacts{
@@ -83,12 +86,15 @@ func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, m
 //Append contacts without duplicates
 //Returns the duplicates
 func (candidates *ContactCandidates) AppendNonDuplicates(contacts []Contact) []Contact{
+
+
 	nonDupNewContacts := []Contact{}
 	duplicateContacts := []Contact{}
+
 	for _,elem := range contacts{
 		exist := false
 		for _, existingElem := range candidates.contacts{
-			if elem == existingElem {
+			if elem.ID.String() == existingElem.ID.String() {
 				exist = true
 				break
 			}
@@ -99,7 +105,9 @@ func (candidates *ContactCandidates) AppendNonDuplicates(contacts []Contact) []C
 			duplicateContacts = append(duplicateContacts,elem)
 		}
 	}
-	candidates.contacts = nonDupNewContacts
+
+	candidates.Append(nonDupNewContacts)
+
 	return duplicateContacts
 }
 

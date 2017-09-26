@@ -32,11 +32,16 @@ func (dispatcher *Dispatcher) StartDispatcher() {
 			select {
 			case work := <-dispatcher.network.WorkQueue:
 
-				log.Println(dispatcher.network.routingTable.me.Address,": Received work request, is reply:",*work.message.IsReply)
+				log.Println(dispatcher.network.routingTable.me.Address,": Received work request with ID",work.id, "is reply:",*work.message.IsReply)
+				log.Println(dispatcher.network.routingTable.me.Address,": TYPE: ",work.message.MessageType.String())
 				go func() { //New GoRoutine
 					if *work.message.IsReply {
+
 						for { //Always try to find the correct worker until Timeout or success
+
 							worker := <-dispatcher.network.WorkerQueue
+							log.Println(dispatcher.network.routingTable.me.Address,": POPPED WORKER")
+
 							log.Println(dispatcher.network.routingTable.me.Address,": WORKER RECIEVED WITH ID",worker.id)
 
 							if worker.id == work.id { //If worker and work id match, SUCCESS!
@@ -44,6 +49,8 @@ func (dispatcher *Dispatcher) StartDispatcher() {
 								worker.workRequest <- work //Dispatch to the correct worker instead (not correct now)
 								break
 							} else {
+								log.Println(dispatcher.network.routingTable.me.Address,": WRONG MOTHERFUCKING WORKER")
+
 								dispatcher.network.WorkerQueue <- worker //Add worker back to queue if it was the wrong worker
 							}
 						}
