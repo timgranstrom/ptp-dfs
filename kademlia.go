@@ -85,7 +85,7 @@ lookForRepliesChannel:
 			select {
 				case reply := <- worker.workRequest: //Idle wait for replies to requests
 					workRecievedCount++ //increment received work counter when received reply
-					log.Println(kademlia.routingTable.me.Address,":&&&&&&&&&&& Work received count:",workRecievedCount)
+					log.Println(kademlia.routingTable.me.Address,":--------------------- Work received count:",workRecievedCount)
 
 					replyContactsProto := reply.message.GetMsg_2().Contacts //Get the Contact Proto message from the reply
 					//Convert protbuf contact to kademlia contact
@@ -94,17 +94,18 @@ lookForRepliesChannel:
 						if *replyContact.KademliaId != kademlia.network.routingTable.me.ID.String(){
 							replyKademlia := NewKademliaID(*replyContact.KademliaId) //Create kademliaId from reply
 							replyContact := NewContact(replyKademlia,*replyContact.Address) //Create contact from reply
+							replyContact.CalcDistance(target.ID) //Calculate distance
 							replyContacts = append(replyContacts, replyContact) //Append reply contacts into a list
 						}else{
 							log.Println(kademlia.routingTable.me.Address,":Filtered from sending [Find Contact] message to self")
 						}
 					}
 
-					println("CURRENT CONTACTS:\n")
+					println("CURRENT CONTACTS:")
 					for _, elem := range contacts.contacts{
 						println(elem.Address)
 					}
-					println("POSSIBLE NEW CONTACTS:\n")
+					println("POSSIBLE NEW CONTACTS:")
 					for _, elem := range replyContacts{
 						println(elem.Address)
 					}
@@ -125,10 +126,10 @@ lookForRepliesChannel:
 						go kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Fire off a new find contact request for each contact
 						}
 
-					log.Println(kademlia.routingTable.me.Address,":&&&&&&&&&&& Work expected count:",expectedWorkCount)
+					log.Println(kademlia.routingTable.me.Address,":---------------------  Work expected count:",expectedWorkCount)
 
 					if workRecievedCount < expectedWorkCount{
-						log.Println(kademlia.routingTable.me.Address,":!!!!!!! ADDED worker back to queue, ID: ",worker.id)
+						log.Println(kademlia.routingTable.me.Address,":!!!!!---------------------  ADDED worker back to queue, ID: ",worker.id)
 						kademlia.network.WorkerQueue <- worker //If we still expect more answers, re-add worker to queue
 					}
 					// TODO If reply has closer contacts than any in the contact list

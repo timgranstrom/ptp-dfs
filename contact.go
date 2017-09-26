@@ -54,29 +54,30 @@ func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, m
 	if len(contacts) == 0{
 		return []Contact{}
 	}
-	duplicates := candidates.AppendNonDuplicates(contacts) //Merge lists together without duplicates, get back the duplicates
+	newCandidates := ContactCandidates{contacts:candidates.contacts}
+	newContacts := newCandidates.AppendNonDuplicates(contacts) //Merge lists together without duplicates, get back the duplicates
 
-	candidates.Sort()
+	newCandidates.Sort()
 	//Remove candidates if they are beyond the maxSize index
-	cutCandidates := []Contact{}
-	for i,elem := range candidates.contacts{
+	finalCandidates := []Contact{}
+	for i,elem := range newCandidates.contacts{
 		if i+1<maxSize{
-			cutCandidates = append(cutCandidates, elem)
+			finalCandidates = append(finalCandidates, elem)
 		}
 	}
-	candidates.contacts = cutCandidates //assign the candidates that made the cut.
+	candidates.contacts = finalCandidates //assign the candidates that made the cut.
 
 	//Find contacts that didn't already exist
 	addedContacts := []Contact{} //new Contacts that were added in the append
 	for _,existingElem := range candidates.contacts{
 		duplicate := false
-		for _, dupElem := range duplicates{ //Check if the contact was added or if it already existed
+		for _, dupElem := range newContacts{ //Check if the contact was added or if it already existed
 			if dupElem == existingElem{
 				duplicate = true
 				break
 			}
 		}
-		if !duplicate{
+		if duplicate{
 			addedContacts = append(addedContacts, existingElem) //add contact as new if it didn't already exist
 		}
 	}
@@ -84,12 +85,10 @@ func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, m
 }
 
 //Append contacts without duplicates
-//Returns the duplicates
+//Returns the added contacts
 func (candidates *ContactCandidates) AppendNonDuplicates(contacts []Contact) []Contact{
-
-
 	nonDupNewContacts := []Contact{}
-	duplicateContacts := []Contact{}
+	//duplicateContacts := []Contact{}
 
 	for _,elem := range contacts{
 		exist := false
@@ -102,13 +101,13 @@ func (candidates *ContactCandidates) AppendNonDuplicates(contacts []Contact) []C
 		if !exist {
 			nonDupNewContacts = append(nonDupNewContacts, elem)
 		}else{
-			duplicateContacts = append(duplicateContacts,elem)
+			//duplicateContacts = append(duplicateContacts,elem)
 		}
 	}
 
 	candidates.Append(nonDupNewContacts)
 
-	return duplicateContacts
+	return nonDupNewContacts
 }
 
 /**
