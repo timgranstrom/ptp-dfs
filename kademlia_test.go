@@ -26,5 +26,9 @@ func TestRunKademliaInstances(t *testing.T){
 	println("---------------------------------------------------\n\n")
 	//Try and find node1 through the network
 	go node2.LookupContact(&node1.routingTable.me)
-	time.Sleep(time.Second*2)
+	time.Sleep(time.Second)
+	println("---------------------------------------------------\n\n\n\n\n")
+
+	go node3.LookupContact(&node2.routingTable.me)
+	time.Sleep(time.Second)
 }

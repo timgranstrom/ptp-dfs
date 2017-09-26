@@ -76,7 +76,8 @@ func (kademlia *Kademlia) LookupContact(target *Contact) {
 	for _, contact := range contacts.contacts { //Send request to nodes own closests contacts for their closests contacts
 		log.Println(kademlia.routingTable.me.Address,":",contact.Address)
 		expectedWorkCount++
-		go kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Create and send lookupcontact request to contact
+		//TODO: Check if adding go below messes it up????
+		kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Create and send lookupcontact request to contact
 	}
 	log.Println(kademlia.routingTable.me.Address,":FINISHED LIST OF CLOSEST CONTACTS INTERNALLY")
 
@@ -123,7 +124,8 @@ lookForRepliesChannel:
 
 					for _,contact := range newContacts{
 						expectedWorkCount++
-						go kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Fire off a new find contact request for each contact
+						//TODO: SET GO ROUTINE HERE AGAIN
+						kademlia.network.SendFindContactMessage(target,&contact,worker.id) //Fire off a new find contact request for each contact
 						}
 
 					log.Println(kademlia.routingTable.me.Address,":---------------------  Work expected count:",expectedWorkCount)

@@ -139,8 +139,11 @@ func (network *Network) SendFindContactMessage(targetContact *Contact,contact *C
 
 	sender := *NewSender(contact.Address,&data) //Create sender to put on sender queue
 	network.SendQueue <- sender //put sender on sender queue
+	log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	log.Println(network.routingTable.me.Address+" : Sent Find Contact Message ("+targetContact.Address+")"+ "to "+contact.Address)
+	log.Println(network.routingTable.me.Address+" : KAD ID: ("+*wrapperMessage.GetMsg_2().KademliaTargetId+")"+ "to "+contact.Address)
+	log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
-	log.Println(network.routingTable.me.Address+" :Sent Find Contact Message ("+targetContact.Address+")"+ "to "+contact.Address)
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
@@ -155,6 +158,7 @@ func (network *Network) SendStoreMessage(data []byte) {
 func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 
 	log.Println(network.routingTable.me.Address,": Recieved find contact request from ",workRequest.senderAddress)
+	log.Println(network.routingTable.me.Address,": KAD ID: ",*workRequest.message.GetMsg_2().KademliaTargetId)
 
 	targetKadId := NewKademliaID(*workRequest.message.GetMsg_2().KademliaTargetId)
 	contacts := network.routingTable.FindClosestContacts(targetKadId,3)
