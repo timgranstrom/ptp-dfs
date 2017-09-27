@@ -159,14 +159,29 @@ func (protobufHandler *ProtobufHandler) CreateLookupContactMessage(KademliaTarge
 }
 
 /*
-Create a contact in message form
+Create a proto contact
  */
-func (protobufHandler *ProtobufHandler) CreateContactMessage(kademliaId *KademliaID, address string) *protoMessages.Contact{
-	contactMessage := &protoMessages.Contact{
+func (protobufHandler *ProtobufHandler) CreateContactMessage(kademliaId *KademliaID, address string) *protoMessages.ProtoContact{
+	contactMessage := &protoMessages.ProtoContact{
 		KademliaId: proto.String(kademliaId.String()),
 		Address: proto.String(address),
 	}
 	return contactMessage
+}
+
+/*
+Create a list of proto contacts
+ */
+func (protobufHandler *ProtobufHandler) CreateContactMessages(contacts []Contact) []*protoMessages.ProtoContact{
+	protoContacts := []*protoMessages.ProtoContact{}
+	for _,elem := range contacts{
+	contactMessage := &protoMessages.ProtoContact{
+		KademliaId: proto.String(elem.ID.String()),
+		Address: proto.String(elem.Address),
+	}
+		protoContacts = append(protoContacts, contactMessage)
+	}
+	return protoContacts
 }
 
 /*

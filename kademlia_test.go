@@ -16,6 +16,9 @@ func TestRunKademliaInstances(t *testing.T){
 	//node2ContactCopy.Address = "127.0.0.1"+node2ContactCopy.Address
 
 	node3 := NewKademlia(":8003", &node2.routingTable.me) //boostrap on node2
+
+	node4 := NewKademlia(":8004", &node3.routingTable.me) //boostrap on node2
+
 	//Run nodes
 	go node1.Run()
 	time.Sleep(time.Second)
@@ -23,12 +26,16 @@ func TestRunKademliaInstances(t *testing.T){
 	time.Sleep(time.Second)
 	go node3.Run()
 	time.Sleep(time.Second)
+	go node4.Run()
+	time.Sleep(time.Second)
 	println("---------------------------------------------------\n\n")
 	//Try and find node1 through the network
 	go node2.LookupContact(&node1.routingTable.me)
-	time.Sleep(time.Second)
+	time.Sleep(time.Second*3)
 	println("---------------------------------------------------\n\n\n\n\n")
 
 	go node3.LookupContact(&node2.routingTable.me)
-	time.Sleep(time.Second)
+	time.Sleep(time.Second*2)
+
+	//time.Sleep(time.Second)
 }

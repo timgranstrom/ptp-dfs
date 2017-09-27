@@ -22,7 +22,7 @@ type Network struct {
 }
 
 type Sender struct {
-	address string
+	address string //Send to this address
 	data []byte
 }
 
@@ -69,6 +69,7 @@ func (network *Network) Sender() {
 	for{
 		select {
 			case sender := <- network.SendQueue:
+
 				ServerAddr,err := net.ResolveUDPAddr("udp",sender.address)
 				CheckError(err)
 
@@ -102,7 +103,11 @@ func (network *Network) Listen() {
 
 func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr,err error){
 	msg := network.protobufhandler.UnMarshalWrapperMessage(bufferMsg)
-	log.Println(network.routingTable.me.Address+" :Received ",msg.MessageType.String(), " from ",addr)
+	//log.Println(network.routingTable.me.Address+" :Received ",msg.MessageType.String(), " from ",addr)
+
+	/*if *msg.MessageType == protoMessages.MessageType_FIND_CONTACT{
+		log.Println(network.routingTable.me.Address," TARGET KAD ID: ",*msg.GetMsg_2().KademliaTargetId)
+	}*/
 
 	if err != nil {
 		fmt.Println("Error: ",err)
@@ -121,28 +126,36 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 
 
 
-	log.Println(network.routingTable.me.Address+": Work request queued")
+	//log.Println(network.routingTable.me.Address+": Work request queued")
 }
 
 func (network *Network) SendPingMessage(contact *Contact) {
 	// TODO
 }
 
-func (network *Network) SendFindContactMessage(targetContact *Contact,contact *Contact, requestId int64) {
+func (network *Network) SendFindContactMessage(targetContact *Contact, sendToContact *Contact, requestId int64, responseContacts []Contact,isReply bool) {
 	// TODO
-	lookupContactMessage := network.protobufhandler.CreateLookupContactMessage(targetContact.ID) //Create a lookupContact message for the target contact
-
+	lookupContactMessage := network.protobufhandler.CreateLookupContactMessage(targetContact.ID) //Create a lookupContact message for the target sendToContact
+	responseProtoContacts := network.protobufhandler.CreateContactMessages(responseContacts)
+	lookupContactMessage.Contacts = responseProtoContacts
 	//Create wrapper message for the request
-	wrapperMessage := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,requestId,protoMessages.MessageType_FIND_CONTACT,lookupContactMessage,false)
+	wrapperMessage := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,requestId,protoMessages.MessageType_FIND_CONTACT,lookupContactMessage,isReply)
+
+
+
+	/*log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	log.Println(network.routingTable.me.Address+" : Sent Find Contact Message ("+targetContact.Address+")"+ "to "+ sendToContact.Address)
+	log.Println(network.routingTable.me.Address+"Contacts sent: ",len(wrapperMessage.GetMsg_2().Contacts))
+	log.Println(network.routingTable.me.Address+" : KAD ID: ("+*wrapperMessage.GetMsg_2().KademliaTargetId+")"+ "to "+ sendToContact.Address)
+	log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")*/
 
 	data := network.protobufhandler.MarshalMessage(wrapperMessage) //Marshal the message for network transport
+	unmarshaledMsg := network.protobufhandler.UnMarshalWrapperMessage(data)
 
-	sender := *NewSender(contact.Address,&data) //Create sender to put on sender queue
-	network.SendQueue <- sender //put sender on sender queue
-	log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-	log.Println(network.routingTable.me.Address+" : Sent Find Contact Message ("+targetContact.Address+")"+ "to "+contact.Address)
-	log.Println(network.routingTable.me.Address+" : KAD ID: ("+*wrapperMessage.GetMsg_2().KademliaTargetId+")"+ "to "+contact.Address)
-	log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	log.Println(network.routingTable.me.Address+" :MARSHALED TARGET KAD ID: "+*unmarshaledMsg.GetMsg_2().KademliaTargetId)
+
+	sender := *NewSender(sendToContact.Address,&data) //Create sender to put on sender queue
+	network.SendQueue <- sender                       //put sender on sender queue
 
 }
 
@@ -158,13 +171,15 @@ func (network *Network) SendStoreMessage(data []byte) {
 func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 
 	log.Println(network.routingTable.me.Address,": Recieved find contact request from ",workRequest.senderAddress)
-	log.Println(network.routingTable.me.Address,": KAD ID: ",*workRequest.message.GetMsg_2().KademliaTargetId)
+	//log.Println(network.routingTable.me.Address,": TARGET KAD ID: ",*workRequest.message.GetMsg_2().KademliaTargetId)
 
 	targetKadId := NewKademliaID(*workRequest.message.GetMsg_2().KademliaTargetId)
+	targetContact := NewContact(targetKadId,"") //Ignore address, we only care about the target kademlia ID here
 	contacts := network.routingTable.FindClosestContacts(targetKadId,3)
-	lookupContactMsg := network.protobufhandler.CreateLookupContactMessage(targetKadId)
+	sendContact := NewContact(nil,workRequest.senderAddress) //Ignore kad id, we only care about the address to send the response
+	//lookupContactMsg := network.protobufhandler.CreateLookupContactMessage(targetKadId)
 
-	log.Println(network.routingTable.me.Address,": Contacts to return:")
+	/*log.Println(network.routingTable.me.Address,": Contacts to return:")
 	log.Println(network.routingTable.me.Address,": <LIST START>")
 
 	for _,elem := range contacts{
@@ -172,13 +187,16 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 		protoContact := network.protobufhandler.CreateContactMessage(elem.ID,elem.Address)
 		lookupContactMsg.Contacts = append(lookupContactMsg.Contacts, protoContact)
 	}
-	log.Println(network.routingTable.me.Address,": <LIST END>")
+	log.Println(network.routingTable.me.Address,": <LIST END>")*/
 
 
-	wrapperMsg := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,workRequest.id,protoMessages.MessageType_FIND_CONTACT, lookupContactMsg,true)
-	marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg)
-	log.Println(network.routingTable.me.Address+" :Sending response to "+workRequest.senderAddress)
-	sender := *NewSender(workRequest.senderAddress,&marshaledMsg) //Create sender to put on sender queue
-	network.SendQueue <- sender //put sender on sender queue
+	//wrapperMsg := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,workRequest.id,protoMessages.MessageType_FIND_CONTACT, lookupContactMsg,true)
+	network.SendFindContactMessage(&targetContact,&sendContact,workRequest.id,contacts,true)
+	//marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg)
+	//unmarshaledMsg := network.protobufhandler.UnMarshalWrapperMessage(marshaledMsg)
+
+	//log.Println(network.routingTable.me.Address+" :(SEND FROM RECEIVED) MARSHALED TARGET KAD ID: "+*unmarshaledMsg.GetMsg_2().KademliaTargetId)
+	//sender := *NewSender(workRequest.senderAddress,&marshaledMsg) //Create sender to put on sender queue
+	//network.SendQueue <- sender //put sender on sender queue
 	//network.Send(workRequest.senderAddress,marshaledMsg)
 }

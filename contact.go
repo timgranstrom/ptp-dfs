@@ -61,7 +61,7 @@ func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, m
 	//Remove candidates if they are beyond the maxSize index
 	finalCandidates := []Contact{}
 	for i,elem := range newCandidates.contacts{
-		if i+1<maxSize{
+		if i<maxSize{
 			finalCandidates = append(finalCandidates, elem)
 		}
 	}

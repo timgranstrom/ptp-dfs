@@ -34,6 +34,8 @@ func (dispatcher *Dispatcher) StartDispatcher() {
 
 				log.Println(dispatcher.network.routingTable.me.Address,": Received work request with ID",work.id, "is reply:",*work.message.IsReply)
 				log.Println(dispatcher.network.routingTable.me.Address,": TYPE: ",work.message.MessageType.String())
+
+
 				go func() { //New GoRoutine
 					if *work.message.IsReply {
 
@@ -41,16 +43,14 @@ func (dispatcher *Dispatcher) StartDispatcher() {
 
 							worker := <-dispatcher.network.WorkerQueue
 							log.Println(dispatcher.network.routingTable.me.Address,": POPPED WORKER")
-
 							log.Println(dispatcher.network.routingTable.me.Address,": WORKER RECIEVED WITH ID",worker.id)
 
 							if worker.id == work.id { //If worker and work id match, SUCCESS!
-								log.Println(dispatcher.network.routingTable.me.Address,": Dispatching work request for worker ID ",work.id)
+								//log.Println(dispatcher.network.routingTable.me.Address,": Dispatching work request for worker ID ",work.id)
 								worker.workRequest <- work //Dispatch to the correct worker instead (not correct now)
 								break
 							} else {
-								log.Println(dispatcher.network.routingTable.me.Address,": WRONG MOTHERFUCKING WORKER")
-
+								log.Println(dispatcher.network.routingTable.me.Address,": WRONG WORKER")
 								dispatcher.network.WorkerQueue <- worker //Add worker back to queue if it was the wrong worker
 							}
 						}
@@ -60,7 +60,7 @@ func (dispatcher *Dispatcher) StartDispatcher() {
 							log.Println(dispatcher.network.routingTable.me.Address," :Picked up PING from Message Queue")
 							break
 						case protoMessages.MessageType_FIND_CONTACT:
-							log.Println(dispatcher.network.routingTable.me.Address," :Picked up FIND CONTACT from Message Queue")
+							//log.Println(dispatcher.network.routingTable.me.Address," :Picked up FIND CONTACT from Message Queue")
 							dispatcher.network.RecieveFindContactMessage(&work)
 							break
 						case protoMessages.MessageType_FIND_DATA:
