@@ -156,28 +156,73 @@ lookForRepliesChannel:
 	// TODO Return closest contacts
 }
 
-func (kademlia *Kademlia) LookupData(hash string) {
-	worker := kademlia.NewWorker()
-	contacts := kademlia.routingTable.FindClosestContacts(NewKademliaID(hash),3) //Retrieve nodes own closest contacts
-	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
-		go func() { //Send requests concurrently
-			print(contact.String()) //Just temporary to avoid errors when compiling
-			// TODO Create and send lookupdata request to contact
-		}()
-	}
+func (kademlia *Kademlia) LookupData(targetHash string) {
+	workRecievedCount, expectedWorkCount := 0, 0 //Keep track of how many requests and replies have been sent
+	worker := kademlia.NewWorker() //Identity of the process running
+	contactCandidates := ContactCandidates{kademlia.routingTable.FindClosestContacts(NewKademliaID(targetHash),3) } //Retrieve nodes own closest contacts
+
+	go func(contacts []Contact) { //Send requests concurrently
+		for _, contact := range contacts {
+			kademlia.network.SendFindDataMessage(targetHash, contact, worker.id, false, nil)
+			expectedWorkCount++
+		}
+	}(contactCandidates.contacts)
+	
+	timer := time.NewTimer(time.Second * 10) //Timer for timeout, can be reset when replies are received
+	LookupDataLoop:
 	for {
 		select {
 			case reply := <- worker.workRequest: //Idle wait for replies to requests
-				print(reply.id) //Just temporary to avoid errors when compiling
-				// TODO If reply has address of data
+				timer.Reset(time.Second * 10) //Reset because there is further hope
+				workRecievedCount++
+				
+				//See if the reply contains the address to the where the data is located
+				if reply.message.GetMsg_3().GetFoundFile() {
 					// TODO Download data
-					// TODO Create and send store request to next closest node
-					// TODO Close the loop
-				// TODO If reply has closer contacts than any in the contact list
-					// TODO Push the new closer contact, pop the furthest
-					// TODO Goroutine to create and send request to new contact
-			// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
-				// TODO Close the loop
+					// TODO Create and send store request to next closest node(s?)
+					log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " found, downloaded and published data")
+					break LookupDataLoop //Process finished with what it intended to do
+					
+				//Otherwise, see what can be done with the replies' closest contacts instead
+				} else {
+					//Extract contacts from reply and filter out self
+					replyContacts := []Contact{}
+					for _,protoContact := range reply.message.GetMsg_3().GetContacts() {
+						protoKademliaID := NewKademliaID(protoContact.GetKademliaId())
+						if kademlia.routingTable.me.ID != protoKademliaID {
+							replyContact := NewContact(protoKademliaID, protoContact.GetAddress())
+							replyContacts = append(replyContacts, replyContact)
+						} else {
+							log.Println(kademlia.routingTable.me.Address,": Filtered from sending [Find Contact] message to self")
+						}
+					}
+					
+					//Attempt to add the contacts from the reply to candidates and save the ones added
+					newContactCandidates := contactCandidates.AppendNonDuplicates(replyContacts)
+					
+					//See if there are any new candidates to send more requests to
+					if len(newContactCandidates) > 0 {
+						go func() { //Send requests concurrently
+							for _,newContact := range newContactCandidates {
+								kademlia.network.SendFindDataMessage(targetHash, newContact, worker.id, false, nil)
+								expectedWorkCount++
+							}
+						}()
+						
+					//See if it was the last reply, in that case the process failed to find the data
+					} else if expectedWorkCount == workRecievedCount {
+						log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " couldn't find the data it was looking for")
+						break LookupDataLoop //Process didn't find the data it was looking for
+					}
+					
+					//There's more replies for requests out there to handle, better get back to work
+					kademlia.network.WorkerQueue <- worker
+				}
+				
+			case <- timer.C: //Idle wait for a timeout
+				// TODO Remove self from worker queue
+				log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " timed out from lack of replies")
+				break LookupDataLoop //Process timed out from lack of replies
 		}
 	}
 }

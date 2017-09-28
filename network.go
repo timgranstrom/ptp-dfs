@@ -159,7 +159,7 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 
 }
 
-func (network *Network) SendFindDataMessage(hash string) {
+func (network *Network) SendFindDataMessage(targetHash string, sendToContact Contact, requestID int64, isReply bool, replyContacts []Contact) {
 	// TODO
 }
 
