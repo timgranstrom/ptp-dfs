@@ -214,3 +214,17 @@ func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *Kade
 	return lookupDataMessage
 }
 
+func ConvertProtobufContacts(protoContacts []*protoMessages.ProtoContact, me Contact) []Contact {
+	contacts := []Contact{}
+	for _,protoContact := range protoContacts {
+		protoKademliaID := NewKademliaID(protoContact.GetKademliaId())
+		if me.ID != protoKademliaID {
+			replyContact := NewContact(protoKademliaID, protoContact.GetAddress())
+			contacts = append(contacts, replyContact)
+		} else {
+			log.Println(me.Address,": Filtered from sending LOOKUP_DATA message to self")
+		}
+	}
+	return contacts
+}
+

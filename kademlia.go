@@ -202,28 +202,19 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 				//Otherwise, see what can be done with the replies' closest contacts instead
 				} else {
 					//Extract contacts from reply and filter out self
-					replyContacts := []Contact{}
-					for _,protoContact := range reply.message.GetMsg_3().GetContacts() {
-						protoKademliaID := NewKademliaID(protoContact.GetKademliaId())
-						if kademlia.routingTable.me.ID != protoKademliaID {
-							replyContact := NewContact(protoKademliaID, protoContact.GetAddress())
-							replyContacts = append(replyContacts, replyContact)
-						} else {
-							log.Println(kademlia.routingTable.me.Address,": Filtered from sending LOOKUP_DATA message to self")
-						}
-					}
+					replyContacts := ConvertProtobufContacts(reply.message.GetMsg_3().GetContacts(), kademlia.routingTable.me)
 					
 					//Attempt to add the contacts from the reply to candidates and save the ones added
 					newContactCandidates := contactCandidates.AppendNonDuplicates(replyContacts)
 					
 					//See if there are any new candidates to send more requests to
 					if len(newContactCandidates) > 0 {
-						go func() { //Send requests concurrently
-							for _,newContact := range newContactCandidates {
-								kademlia.network.SendFindDataMessage(targetHash, newContact, worker.id, false, nil)
-								expectedWorkCount++
+						go func(contacts []Contact, count *int) { //Send requests concurrently
+							for _, contact := range contacts {
+								kademlia.network.SendFindDataMessage(targetHash, contact, worker.id, false, nil)
+								*count++
 							}
-						}()
+						}(newContactCandidates, &workRecievedCount)
 
 					//See if it was the last reply, in that case the process failed to find the data
 					} else if expectedWorkCount == workRecievedCount {
