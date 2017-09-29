@@ -1,13 +1,13 @@
-syntax = "proto2";
+syntax = "proto3";
 
 package protoMessages;
 
 //Common wrapper for all 4 types of messages
 message WrapperMessage {
-	required MessageType message_type = 1; //To know what type of message it contains
-	required int64 request_id = 2; //Id of the request the message is relevant for
-	required string sender_kademlia_id = 3; //For the receiver to save in their routing table
-	optional bool is_reply = 4; //Denotes if a message is a request or a reply to a request
+	MessageType message_type = 1; //To know what type of message it contains
+	int64 request_id = 2; //Id of the request the message is relevant for
+	string sender_kademlia_id = 3; //For the receiver to save in their routing table
+	bool is_reply = 4; //Denotes if a message is a request or a reply to a request
 	oneof messages { //Type-of-message-specific header, only one can be used
 		PingMessage msg_1 = 5;
 		LookupContactMessage msg_2 = 6;
@@ -28,26 +28,26 @@ message PingMessage { }
 
 //Sub-header to find contacts, returns a "list" of contacts
 message LookupContactMessage {
-	required string kademlia_target_id = 1; //Id of target node
+	string kademlia_target_id = 1; //Id of target node
 	repeated ProtoContact contacts = 2; //For replying with own closest contacts
 }
 
 //Protobuf representation of Contact.go
 message ProtoContact {
-	required string kademlia_id = 1; //Position of node in the tree
-	required string address = 2; //IP address for direct contact to the node
+	string kademlia_id = 1; //Position of node in the tree
+	string address = 2; //IP address for direct contact to the node
 }
 
 //Sub-header to find data with a certain id, returns closer contacts if it wasn't found
 message LookupDataMessage {
-	required string kademlia_target_id = 1; //Id of target data
-	required bool found_file = 2; //If file were found or not
-	optional string file_location_address = 3; //If file were found, return the address of where it can be downloaded
+	string kademlia_target_id = 1; //Id of target data
+	bool found_file = 2; //If file were found or not
+	string file_location_address = 3; //If file were found, return the address of where it can be downloaded
 	repeated ProtoContact contacts = 4; //If target wasn't found, return closer contacts
 }
 
 //Sub-header to share where a nodes shared data can be found
 message StoreMessage {
-	required string key_store = 1; //Key should be kademliaID
-	required string value_store = 2; //Value should be IP Address of node holding
+	string key_store = 1; //Key should be kademliaID
+	string value_store = 2; //Value should be IP Address of node holding
 }
