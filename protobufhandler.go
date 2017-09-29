@@ -89,10 +89,10 @@ Create a Wrapper Message with ping message
 */
 func (protobufHandler *ProtobufHandler) CreateWrapperMessage_1(senderKademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.PingMessage, isReply bool) *protoMessages.WrapperMessage{
 	wrapperMessage := &protoMessages.WrapperMessage{
-		SenderKademliaId: proto.String(senderKademliaId.String()),
-		MessageType:&messageType,
-		RequestId:proto.Int64(requestId),
-		IsReply:&isReply,
+		SenderKademliaId: senderKademliaId.String(),
+		MessageType:messageType,
+		RequestId:requestId,
+		IsReply:isReply,
 	}
 	wrappedMsg := protoMessages.WrapperMessage_Msg_1{message}
 	wrapperMessage.Messages = &wrappedMsg
@@ -105,10 +105,10 @@ Create a Wrapper Message with lookup contact message
 */
 func (protobufHandler *ProtobufHandler) CreateWrapperMessage_2(senderKademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.LookupContactMessage, isReply bool) *protoMessages.WrapperMessage{
 	wrapperMessage := &protoMessages.WrapperMessage{
-		SenderKademliaId: proto.String(senderKademliaId.String()),
-		MessageType:&messageType,
-		RequestId:proto.Int64(requestId),
-		IsReply:&isReply,
+		SenderKademliaId: senderKademliaId.String(),
+		MessageType:messageType,
+		RequestId:requestId,
+		IsReply:isReply,
 	}
 	wrappedMsg := protoMessages.WrapperMessage_Msg_2{message}
 	wrapperMessage.Messages = &wrappedMsg
@@ -121,10 +121,10 @@ Create a Wrapper Message with lookup data message
 */
 func (protobufHandler *ProtobufHandler) CreateWrapperMessage_3(senderKademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.LookupDataMessage, isReply bool) *protoMessages.WrapperMessage{
 	wrapperMessage := &protoMessages.WrapperMessage{
-		SenderKademliaId: proto.String(senderKademliaId.String()),
-		MessageType:&messageType,
-		RequestId:proto.Int64(requestId),
-		IsReply:&isReply,
+		SenderKademliaId: senderKademliaId.String(),
+		MessageType:messageType,
+		RequestId:requestId,
+		IsReply:isReply,
 	}
 	wrappedMsg := protoMessages.WrapperMessage_Msg_3{message}
 	wrapperMessage.Messages = &wrappedMsg
@@ -137,10 +137,10 @@ Create a Wrapper Message with store message
 */
 func (protobufHandler *ProtobufHandler) CreateWrapperMessage_4(senderKademliaId *KademliaID, requestId int64, messageType protoMessages.MessageType, message *protoMessages.StoreMessage, isReply bool) *protoMessages.WrapperMessage{
 	wrapperMessage := &protoMessages.WrapperMessage{
-		SenderKademliaId: proto.String(senderKademliaId.String()),
-		MessageType:&messageType,
-		RequestId:proto.Int64(requestId),
-		IsReply:&isReply,
+		SenderKademliaId: senderKademliaId.String(),
+		MessageType:messageType,
+		RequestId:requestId,
+		IsReply:isReply,
 	}
 	wrappedMsg := protoMessages.WrapperMessage_Msg_4{message}
 	wrapperMessage.Messages = &wrappedMsg
@@ -153,7 +153,7 @@ Create a Lookup Contact Message
  */
 func (protobufHandler *ProtobufHandler) CreateLookupContactMessage(KademliaTargetId *KademliaID) *protoMessages.LookupContactMessage{
 	lookupContactMessage := &protoMessages.LookupContactMessage{
-		KademliaTargetId: proto.String(KademliaTargetId.String()),
+		KademliaTargetId: KademliaTargetId.String(),
 	}
 	return lookupContactMessage
 }
@@ -163,8 +163,8 @@ Create a proto contact
  */
 func (protobufHandler *ProtobufHandler) CreateContactMessage(kademliaId *KademliaID, address string) *protoMessages.ProtoContact{
 	contactMessage := &protoMessages.ProtoContact{
-		KademliaId: proto.String(kademliaId.String()),
-		Address: proto.String(address),
+		KademliaId: kademliaId.String(),
+		Address: address,
 	}
 	return contactMessage
 }
@@ -176,8 +176,8 @@ func (protobufHandler *ProtobufHandler) CreateContactMessages(contacts []Contact
 	protoContacts := []*protoMessages.ProtoContact{}
 	for _,elem := range contacts{
 	contactMessage := &protoMessages.ProtoContact{
-		KademliaId: proto.String(elem.ID.String()),
-		Address: proto.String(elem.Address),
+		KademliaId: elem.ID.String(),
+		Address: elem.Address,
 	}
 		protoContacts = append(protoContacts, contactMessage)
 	}
@@ -198,8 +198,8 @@ Create a Store Message
  */
 func (protobufHandler *ProtobufHandler) CreateStoreMessage(kademliaId *KademliaID, address string) *protoMessages.StoreMessage{
 	storeMessage := &protoMessages.StoreMessage{
-		KeyStore: proto.String(kademliaId.String()), //Set kademlia id as key
-		ValueStore: proto.String(address), //Set ip address as stored value
+		KeyStore: kademliaId.String(), //Set kademlia id as key
+		ValueStore: address, //Set ip address as stored value
 	}
 	return storeMessage
 }
@@ -209,7 +209,7 @@ Create a Lookup Data Message
  */
 func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *KademliaID) *protoMessages.LookupDataMessage{
 	lookupDataMessage := &protoMessages.LookupDataMessage{
-		KademliaTargetId: proto.String(kademliaId.String()),
+		KademliaTargetId: kademliaId.String(),
 	}
 	return lookupDataMessage
 }

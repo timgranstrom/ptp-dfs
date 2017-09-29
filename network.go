@@ -52,20 +52,10 @@ func CheckError(err error) {
 	}
 }
 
-func (network *Network)SetupUDPListener(address string) *net.UDPConn{
-	/* Lets prepare a address at any address at :8000*/
-	ServerAddr,err := net.ResolveUDPAddr("udp",address)
-	CheckError(err)
-
-	/* Now listen at selected port */
-	ServerConn, err := net.ListenUDP("udp", ServerAddr)
-	log.Println(address+": Connection Established at "+ServerAddr.IP.String()+":"+strconv.Itoa(ServerAddr.Port))
-	CheckError(err)
-	network.listenerActive = true
-	return ServerConn
-}
 
 func (network *Network) Sender() {
+	log.Println(network.routingTable.me.Address,": SENDER STARTED")
+
 	for{
 		select {
 			case sender := <- network.SendQueue:
@@ -74,30 +64,47 @@ func (network *Network) Sender() {
 				CheckError(err)
 
 				LocalAddr, err := net.ResolveUDPAddr("udp", network.routingTable.me.Address)
+				//CheckError(err)
+				Conn, err := net.DialUDP("udp", LocalAddr,ServerAddr)
+				CheckError(err)
+			//	log.Println(network.routingTable.me.Address+" :Sent Message to ",sender.address)
+				log.Println(network.routingTable.me.Address,": SENT MESSAGE TO OF SIZE ",len(sender.data),"FROM ",LocalAddr.String(),"TO",ServerAddr.String())
+				_,err = Conn.Write(sender.data)
 				CheckError(err)
 
-				Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
-				CheckError(err)
-
-				_,error := Conn.Write(sender.data)
-				if error != nil {
-					log.Fatal(err)
-				}
 				Conn.Close()
 		}
-
 	}
 }
 
+
+func (network *Network)SetupUDPListener(address string) *net.UDPConn{
+	/* Lets prepare a address at any address at :8000*/
+	ServerAddr,err := net.ResolveUDPAddr("udp",address)
+	CheckError(err)
+
+	/* Now listen at selected port */
+	ServerConn, err := net.ListenUDP("udp", ServerAddr)
+	//ServerConn.SetReadBuffer(4096)
+	ServerConn.SetWriteBuffer(1048576)
+	ServerConn.SetReadBuffer(1048576)
+	log.Println(address+": Connection Established at "+ServerAddr.IP.String()+":"+strconv.Itoa(ServerAddr.Port))
+	CheckError(err)
+	network.listenerActive = true
+	return ServerConn
+}
+
 func (network *Network) Listen() {
+	log.Println(network.routingTable.me.Address,": LISTENER")
 	ServerConn := network.SetupUDPListener(network.routingTable.me.Address)
 	defer ServerConn.Close()
 
 	buffer := make([]byte, 1024)
 
 	for { //Infinite for-loop to check for incomming messages
-		_,addr,err := ServerConn.ReadFromUDP(buffer)
-		go network.HandleRecievedMessage(buffer,addr,err)
+		i,addr,err := ServerConn.ReadFromUDP(buffer)
+		log.Println(network.routingTable.me.Address, ": RECEIVED MESSAGE OF SIZE", i, " FROM ", addr)
+		go network.HandleRecievedMessage(buffer, addr, err)
 	}
 }
 
@@ -113,12 +120,13 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 		fmt.Println("Error: ",err)
 	}
 	//take the message and make a WorkRequest out of them.
-	work := WorkRequest{*msg.RequestId,*msg,addr.String()}
+	work := WorkRequest{msg.RequestId,*msg,addr.String()}
 
 	//When handling work, make sure to always add the message sender as a contact
-	kadId := NewKademliaID(*work.message.SenderKademliaId)
+	kadId := NewKademliaID(work.message.SenderKademliaId)
 	requestContact := NewContact(kadId,work.senderAddress)
 	network.routingTable.AddContact(requestContact)
+	//log.Println(network.routingTable.me.Address+" :Received message from ",addr,": ADDED AS CONTACT")
 
 
 	//Push the work onto the queue.
@@ -150,9 +158,9 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 	log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")*/
 
 	data := network.protobufhandler.MarshalMessage(wrapperMessage) //Marshal the message for network transport
-	unmarshaledMsg := network.protobufhandler.UnMarshalWrapperMessage(data)
+	//unmarshaledMsg := network.protobufhandler.UnMarshalWrapperMessage(data)
 
-	log.Println(network.routingTable.me.Address+" :MARSHALED TARGET KAD ID: "+*unmarshaledMsg.GetMsg_2().KademliaTargetId)
+	//log.Println(network.routingTable.me.Address+" :MARSHALED TARGET KAD ID: "+unmarshaledMsg.GetMsg_2().KademliaTargetId)
 
 	sender := *NewSender(sendToContact.Address,&data) //Create sender to put on sender queue
 	network.SendQueue <- sender                       //put sender on sender queue
@@ -170,10 +178,10 @@ func (network *Network) SendStoreMessage(data []byte) {
 //RENAME "PROTOCONTACT" TO PROTOCONTACT INSTEAD OF CONTACT
 func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 
-	log.Println(network.routingTable.me.Address,": Recieved find contact request from ",workRequest.senderAddress)
+	//log.Println(network.routingTable.me.Address,": Recieved [Find Contact Request] from ",workRequest.senderAddress)
 	//log.Println(network.routingTable.me.Address,": TARGET KAD ID: ",*workRequest.message.GetMsg_2().KademliaTargetId)
 
-	targetKadId := NewKademliaID(*workRequest.message.GetMsg_2().KademliaTargetId)
+	targetKadId := NewKademliaID(workRequest.message.GetMsg_2().KademliaTargetId)
 	targetContact := NewContact(targetKadId,"") //Ignore address, we only care about the target kademlia ID here
 	contacts := network.routingTable.FindClosestContacts(targetKadId,3)
 	sendContact := NewContact(nil,workRequest.senderAddress) //Ignore kad id, we only care about the address to send the response
@@ -191,11 +199,18 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 
 
 	//wrapperMsg := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,workRequest.id,protoMessages.MessageType_FIND_CONTACT, lookupContactMsg,true)
+	//log.Println(network.routingTable.me.Address,": <LIST OF FOUND CONTACTS START>")
+	//for _,contact := range contacts{
+	//	log.Println(network.routingTable.me.Address,": -->",contact.Address)
+
+	//}
+	//log.Println(network.routingTable.me.Address,": </LIST OF FOUND CONTACTS END>")
+
 	network.SendFindContactMessage(&targetContact,&sendContact,workRequest.id,contacts,true)
 	//marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg)
 	//unmarshaledMsg := network.protobufhandler.UnMarshalWrapperMessage(marshaledMsg)
 
-	//log.Println(network.routingTable.me.Address+" :(SEND FROM RECEIVED) MARSHALED TARGET KAD ID: "+*unmarshaledMsg.GetMsg_2().KademliaTargetId)
+	//log.Println(network.routingTable.me.Address+" :(SEND FROM RECEIVED) MARSHALED TARGET KAD ID: "+sendContact.Address)
 	//sender := *NewSender(workRequest.senderAddress,&marshaledMsg) //Create sender to put on sender queue
 	//network.SendQueue <- sender //put sender on sender queue
 	//network.Send(workRequest.senderAddress,marshaledMsg)
