@@ -47,8 +47,8 @@ func TestRunKademliaInstances(t *testing.T){
 	//time.Sleep(time.Second*1)
 	println("node3.LookcupContact node 2 ----------------------------\n\n")
 
-	go node3.LookupContact(&node2.routingTable.me)
-	time.Sleep(time.Second*3)
+	node3.LookupContact(&node2.routingTable.me)
+	//time.Sleep(time.Second*10)
 
 	//time.Sleep(time.Second)*/
 }

@@ -63,8 +63,7 @@ func (kademlia *Kademlia) BoostrapProcess(){
 func (kademlia *Kademlia) LookupContact(target *Contact) {
 	workRecievedCount := 0
 	expectedWorkCount := 0
-	//wrcTest := make(chan int)
-
+	timeoutTimer := time.NewTimer(time.Second * 3)
 	worker := kademlia.NewWorker() //Create a worker that maps to the function
 	//log.Println(kademlia.routingTable.me.Address+" :[Lookup Contact] was called internally, ID: ",worker.id)
 
@@ -140,6 +139,10 @@ lookForRepliesChannel:
 						//TODO: SET GO ROUTINE HERE AGAIN
 						kademlia.network.SendFindContactMessage(target,&contact,worker.id,[]Contact{},false) //Fire off a new find contact request for each contact
 					}
+					//Reset timer if you have new contacts to send messages to
+					if len(newContacts) > 0{
+						timeoutTimer.Reset(time.Second*3)
+					}
 
 					//log.Println(kademlia.routingTable.me.Address,":---------------------  Work expected count:",expectedWorkCount)
 
@@ -157,13 +160,16 @@ lookForRepliesChannel:
 						// TODO Goroutine to create and send request to new contact
 				// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
 					// TODO Close the loop
+			case <- timeoutTimer.C:
+				log.Println(kademlia.routingTable.me.Address,": TIMER EXPIRED\n")
+				break lookForRepliesChannel
 			default:
 				if workRecievedCount == expectedWorkCount{
 					break lookForRepliesChannel
 				}
-
 			}
 		}
+	close(worker.workRequest) //Close the worker channel
 	log.Println(kademlia.routingTable.me.Address,": Finished [Find Contact]\n")
 
 	// TODO Return closest contacts
