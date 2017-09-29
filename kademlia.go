@@ -159,14 +159,17 @@ lookForRepliesChannel:
 func (kademlia *Kademlia) LookupData(targetHash string) {
 	workRecievedCount, expectedWorkCount := 0, 0 //Keep track of how many requests and replies have been sent
 	worker := kademlia.NewWorker() //Identity of the process running
+	defer close(worker.workRequest)
 	contactCandidates := ContactCandidates{kademlia.routingTable.FindClosestContacts(NewKademliaID(targetHash),3) } //Retrieve nodes own closest contacts
 
-	go func(contacts []Contact) { //Send requests concurrently
+	log.Println(kademlia.routingTable.me.Address,": Started LOOKUP_DATA ", worker.id, " for hash ", targetHash)
+
+	go func(contacts []Contact, count *int) { //Send requests concurrently
 		for _, contact := range contacts {
 			kademlia.network.SendFindDataMessage(targetHash, contact, worker.id, false, nil)
-			expectedWorkCount++
+			*count++
 		}
-	}(contactCandidates.contacts)
+	}(contactCandidates.contacts, &workRecievedCount)
 	
 	timer := time.NewTimer(time.Second * 10) //Timer for timeout, can be reset when replies are received
 	LookupDataLoop:
@@ -180,7 +183,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 				if reply.message.GetMsg_3().GetFoundFile() {
 					// TODO Download data
 					// TODO Create and send store request to next closest node(s?)
-					log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " found, downloaded and published data")
+					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " found, downloaded and published data")
 					break LookupDataLoop //Process finished with what it intended to do
 					
 				//Otherwise, see what can be done with the replies' closest contacts instead
@@ -193,7 +196,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 							replyContact := NewContact(protoKademliaID, protoContact.GetAddress())
 							replyContacts = append(replyContacts, replyContact)
 						} else {
-							log.Println(kademlia.routingTable.me.Address,": Filtered from sending [Find Contact] message to self")
+							log.Println(kademlia.routingTable.me.Address,": Filtered from sending LOOKUP_DATA message to self")
 						}
 					}
 					
@@ -208,19 +211,19 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 								expectedWorkCount++
 							}
 						}()
-						
+
 					//See if it was the last reply, in that case the process failed to find the data
 					} else if expectedWorkCount == workRecievedCount {
-						log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " couldn't find the data it was looking for")
+						log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " couldn't find the data it was looking for")
 						break LookupDataLoop //Process didn't find the data it was looking for
 					}
 					
 					//There's more replies for requests out there to handle, better get back to work
 					kademlia.network.WorkerQueue <- worker
 				}
-				
-			case <- timer.C: //Idle wait for a timeout
-				// TODO Remove self from worker queue
+
+			//Idle wait for a timeout, timeout resets when a reply arrives
+			case <- timer.C:
 				log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " timed out from lack of replies")
 				break LookupDataLoop //Process timed out from lack of replies
 		}
