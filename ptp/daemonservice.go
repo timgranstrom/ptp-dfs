@@ -1,4 +1,4 @@
-package daemons
+package ptp
 
 import (
 	"github.com/takama/daemon"
@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"bufio"
 	"strings"
+	"io/ioutil"
+	"encoding/hex"
 )
 
 const (
@@ -16,21 +18,20 @@ const (
 	DefaultDaemonDescription  = "This is a kademlia implementation of a distributed file system"
 	DefaultDaemonCommandPort  = ":7009"
 	DefaultKademliaPort  = ":8000"
-
 )
 
 // Service has embedded daemon
 type DaemonService struct {
 	daemon.Daemon
 	dependencies  []string
-	//kademliaNode Kademlia
+	kademliaNode *Kademlia
 }
 
 func NewDaemonService() *DaemonService{
 	service := &DaemonService{}                                        //Create service
 	newDaemon, err := daemon.New(DefaultDaemonName,DefaultDaemonDescription) //Create default daemon
 	service.Daemon = newDaemon                                         //Add default daemon to service
-	//service.kademliaNode = ptp.NewKademlia(DefaultKademliaPort,nil)
+	service.kademliaNode = NewKademlia(DefaultKademliaPort,nil) //Created kademlia node
 	if err != nil{
 		log.Fatal("Error during daemon naming: ",err)
 		os.Exit(1) // quit application
@@ -87,6 +88,10 @@ func (ds *DaemonService) Status(){
 	log.Println(stats)
 }
 
+func (ds *DaemonService) RunKademlia(){
+	ds.kademliaNode.Run()
+}
+
 func (ds *DaemonService) RunDaemonCommandListener(){
 	// Listen for incoming connections.
 	l, err := net.Listen("tcp", DefaultDaemonCommandPort)
@@ -116,13 +121,13 @@ func (ds *DaemonService) handleRequest(conn net.Conn) {
 	// Make a buffer to hold incoming data.
 	buf := make([]byte, 1024)
 	// Read the incoming connection into the buffer.
-	_, err := conn.Read(buf)
+	size, err := conn.Read(buf)
 	if err != nil {
 		fmt.Println("Error reading:", err.Error())
 	}
-	log.Println("Received msg: ",string(buf))
-	resultMessage := ds.ParseReceivedMessage(string(buf)) //parse the message and handle it
-
+	receivedMsg := string(buf[0:size]) //get message based on it's size
+	log.Println("Received msg: ",receivedMsg)
+	resultMessage := ds.ParseReceivedMessage(receivedMsg) //parse the message and handle it
 	// Send a response back to sender
 	conn.Write([]byte(resultMessage))
 	// Close the connection when finished
@@ -136,10 +141,18 @@ func (ds *DaemonService) SendRequest(message string) {
 	if error != nil{
 		log.Println("COULDN'T SEND MESSAGE TO DAEMON, Error:",error)
 	}
+
+	// Make a buffer to hold incoming data.
+	buf := make([]byte, 1024)
+
 	conn.Write([]byte(message)) //Send message to daemon service
 	// listen for reply
-	response, _ := bufio.NewReader(conn).ReadString('\n')
-	fmt.Print("Response from daemon: "+response)
+	size, error := bufio.NewReader(conn).Read(buf)
+	if error != nil{
+		log.Println("COULDN'T RECIEVE RESPONSE MESSAGE FROM DAEMON, Error:",error)
+	}
+
+	log.Print("Response from daemon: "+string(buf[0:size]))
 }
 
 func (ds *DaemonService) ParseFilePathCommand(relativeFilePath string) (fileName string, absoluteFilePath string){
@@ -166,25 +179,73 @@ Parse the message and handle it accordingly
  */
 func (ds *DaemonService) ParseReceivedMessage(message string) string{
 	msgArgs := strings.Fields(message) //Split command message into fields
-	log.Println("ARGUMENT LENGTH: ",len(msgArgs))
-	if len(msgArgs) > 2{ //Message contains something
-		switch msgArgs[1] {
+	if len(msgArgs) > 0{ //Message contains something
+		switch msgArgs[0] {
 		case "store":
-			//storeCommand.Parse(os.Args[2:])
+			return ds.Store(msgArgs[1])
 		case "cat":
-			//catCommand.Parse(os.Args[2:])
-
-			//log.Println(*catName)
-
+			return ds.Cat(msgArgs[1])
 		case "pin":
-			//pinCommand.Parse(os.Args[2:])
-
+			return ds.Pin(msgArgs[1],true)
 		case "unpin":
-			//unpinCommand.Parse(os.Args[2:])
-
-		case "start":
-			//daemonCommand.Parse(os.Args[2:])
+			return ds.Pin(msgArgs[1],false)
+		case "me":
+			me := ds.kademliaNode.GetMe() //Get my own Kademlia contact
+			return me.ID.String() //Return my kademlia ID
 		}
 	}
-	return "nothing done yet"
+	return "No Valid Response"
+}
+
+func (ds *DaemonService) Cat(key string) string{
+	decodedKey,err := hex.DecodeString(key)
+	if err != nil{
+		//log.Fatal("Key decoding error: ",err)
+		return "Key decoding error: "+err.Error()
+	}
+
+	data,isfound := ds.kademliaNode.network.store.RetrieveData(decodedKey)
+
+	if isfound{
+		return string(data)
+	}
+	return "Could not find data with key"
+}
+
+func (ds *DaemonService)Store(filepath string) string{
+	// call the store function and print the hash out
+	fileName,absPath := ds.ParseFilePathCommand(filepath)
+	//fmt.Println("File name: ",fileName,", File Path:",absPath) // print the file name and it's path
+	b, err := ioutil.ReadFile(absPath)                 // Take out the content of the file in byte
+	if err != nil {
+		//fmt.Print(err)
+		return "Could not read file: "+err.Error()
+	}
+	key := ds.kademliaNode.Store(fileName,b)
+	return key
+}
+
+func (ds *DaemonService) Pin(key string,isPinned bool) string{
+	decodedKey,err := hex.DecodeString(key)
+	if err != nil{
+		//log.Fatal("Key decoding error: ",err)
+		return "Key decoding error: "+err.Error()
+	}
+
+	_,isfound := ds.kademliaNode.network.store.RetrieveData(decodedKey) //Check if any data actually is stored for key
+
+	if !isfound{
+		return "Could not find data to pin with key"
+	}
+
+	err = ds.kademliaNode.network.store.SetPin(decodedKey,isPinned)
+	if err != nil{
+		//log.Fatal("Could not PIN for key, error: ",err)
+		return "Key decoding error: "+err.Error()
+	}
+	if isPinned {
+		return "Pin Successful"
+	} else{
+		return "Unpin Successful"
+	}
 }

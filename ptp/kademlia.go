@@ -240,10 +240,11 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 	}
 }
 
-func (kademlia *Kademlia) Store(fileName string,data []byte) (key []byte) {
-	key = kademlia.network.store.GetKey(fileName) //Get the finalized hash result
-	keyEncoded := hex.EncodeToString(key) //Encode the hash key as a string
+func (kademlia *Kademlia) Store(fileName string,data []byte) (keyEncoded string) {
+	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
+	keyEncoded = hex.EncodeToString(key) //Encode the hash key as a string
 	lifeTime := time.Minute //Set lifetime/duration of the data store
+	kademlia.network.store.StoreData(key,data,time.Now().Add(lifeTime),false) //Store data for ourselves as well
 	storeKadId := NewKademliaID(keyEncoded) //Make kademlia id out of the key
 	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
 	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data
@@ -251,5 +252,12 @@ func (kademlia *Kademlia) Store(fileName string,data []byte) (key []byte) {
 	for _,targetContact := range contactCandidates.contacts{
 		kademlia.network.SendStoreMessage(&targetContact,key,data,lifeTime,worker.id,false)
 	}
-	return key
+	return keyEncoded
+}
+
+/**
+*Return myself as a contact
+ */
+func (kademlia *Kademlia) GetMe() Contact{
+	return kademlia.routingTable.me
 }

@@ -5,22 +5,21 @@ import (
 	"os"
 	"log"
 	"fmt"
-	"io/ioutil"
-	"github.com/timgranstrom/ptp-dfs"
-	"time"
-	"github.com/timgranstrom/ptp-dfs/daemons"
+	"github.com/timgranstrom/ptp-dfs/ptp"
 )
 
 func main() {
-	daemonService := daemons.NewDaemonService()
+	daemonService := ptp.NewDaemonService()
 
+	//Head commands
 	storeCommand := flag.NewFlagSet("store", flag.ExitOnError)
 	catCommand := flag.NewFlagSet("cat", flag.ExitOnError)
 	pinCommand := flag.NewFlagSet("pin", flag.ExitOnError)
 	unpinCommand := flag.NewFlagSet("unpin", flag.ExitOnError)
+	meCommand := flag.NewFlagSet("me", flag.ExitOnError)
 	daemonCommand := flag.NewFlagSet("daemon", flag.ExitOnError)
 
-
+	//Sub commands
 	storeName := storeCommand.String("name", "", "name of the file")
 	catName := catCommand.String("hash", "", "the hash of the file")
 	pinName := pinCommand.String("hash", "", "the file-hash that should be pinned")
@@ -39,8 +38,6 @@ func main() {
 		case "cat":
 			catCommand.Parse(os.Args[2:])
 
-			log.Println(*catName)
-
 		case "pin":
 			pinCommand.Parse(os.Args[2:])
 
@@ -49,74 +46,57 @@ func main() {
 
 		case "daemon":
 			daemonCommand.Parse(os.Args[2:])
+
+		case "me":
+			meCommand.Parse(os.Args[2:])
 		}
 	} else{
 		log.Println("no commands")
-		log.Println("[STARTING DAEMON COMMAND LISTENER]")
-		daemonService.RunDaemonCommandListener()
+		log.Println("[STARTING DAEMON COMMAND LISTENER AND KADEMLIA NODE]")
+		go daemonService.RunKademlia() //Start up kademlia in parallell
+		daemonService.RunDaemonCommandListener() //run the daemon command listener
 	}
 
 	if unpinCommand.Parsed() {
 		fmt.Println("file that should be unpinned = " + *unpinName)
 		unpinMessage := "unpin "+*unpinName
 		daemonService.SendRequest(unpinMessage)
-		//Call unpin function
 	}
 
 	if pinCommand.Parsed() {
-		fmt.Println("file that should be pinned = " + *pinName)
-		//Call pin function
+		pinMessage := "pin "+*pinName
+		daemonService.SendRequest(pinMessage)
+
 	}
 
 	if storeCommand.Parsed() {
-		// call the store function and print the hash out
-		fileName,absPath := daemonService.ParseFilePathCommand(*storeName)
-		fmt.Println("File name: ",fileName,", File Path:",absPath) // print the file name and it's path
-		b, err := ioutil.ReadFile(*storeName)                 // Take out the content of the file in byte
-		if err != nil {
-			fmt.Print(err)
-		}
-		//fmt.Println("File stored = " + *storeName + "  " )
-		fmt.Println(string(b))
-
-		nodeTest := ptp.NewKademlia(":8001",nil)
-		go nodeTest.Run()
-		time.Sleep(time.Second)
-		nodeTest.Store(fileName,b)
-		time.Sleep(time.Second)
-		// log.Println(kademlia.store(subString,b))
+		storeMessage := "store "+*storeName
+		daemonService.SendRequest(storeMessage)
 	}
 
 	if catCommand.Parsed() {
-		// find the path to the data that should be printed out
-		//fileName =: Kademlia.findData(*catName)
-		b, err := ioutil.ReadFile(*catName) // just pass the file name
-		if err != nil {
-			fmt.Print(err)
-		}
-		fmt.Println(b)
-		str := string(b) // convert content to a string
-		fmt.Println(str)
+		catMessage := "cat "+*catName
+		daemonService.SendRequest(catMessage)
+	}
+
+	if meCommand.Parsed() {
+		meMessage := "me"
+		daemonService.SendRequest(meMessage)
 	}
 
 	if daemonCommand.Parsed() {
 		if *daemonInstall{
-			//log.Println("SUCCESS INSTALL TEST")
 			daemonService.Install()
 		}else if *daemonRemove{
-			//log.Println("SUCCESS REMOVE TEST")
 			daemonService.Remove()
 
 		}else if *daemonStart{
-			//log.Println("SUCCESS START TEST")
 			daemonService.Start()
 
 		}else if *daemonStop{
-			//log.Println("SUCCESS STOP TEST")
 			daemonService.Stop()
 
 		}else if *daemonStatus{
-			//log.Println("SUCCESS STATUS TEST")
 			daemonService.Status()
 		}
 	}
