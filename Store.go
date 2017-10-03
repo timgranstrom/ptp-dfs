@@ -13,6 +13,7 @@ type Store struct{
 	mutex *sync.Mutex
 	data map[string][]byte
 	expirationTime map[string]time.Time
+	pin map[string]bool
 }
 
 // Init initializes the Store
@@ -44,6 +45,26 @@ func (store *Store) RetrieveExpirationTime(key []byte) (time time.Time, isFound 
 	return time,isFound
 }
 
+/**
+Retrieve info if the key/data is pinned or not.
+ */
+func (store *Store) RetrieveIsPinned(key []byte) (isPinned bool, isFound bool){
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	isPinned, isFound = store.pin[string(key)] //Get data that matches the key from the store
+	return isPinned,isFound
+}
+
+/**
+Retrieve info if the key/data is pinned or not.
+ */
+func (store *Store) SetPin(key []byte,isPinned bool) error{
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	store.pin[string(key)] = isPinned //Mark the key as pinned or not pinned
+	return nil
+}
+
 // GetKey returns the key for data
 func (store *Store) GetKey(fileName string) []byte {
 	sha := sha1.Sum([]byte(fileName))
@@ -53,11 +74,12 @@ func (store *Store) GetKey(fileName string) []byte {
 /**
 Store data and expiration time for a specific key
  */
-func (store *Store) StoreData(key []byte, data []byte, expirationTime time.Time) error{
+func (store *Store) StoreData(key []byte, data []byte, expirationTime time.Time,pinned bool) error{
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
 	store.data[string(key)] = data
 	store.expirationTime[string(key)] = expirationTime
+	store.pin[string(key)] = pinned
 	return nil
 }
 
@@ -67,7 +89,12 @@ func (store *Store) StoreData(key []byte, data []byte, expirationTime time.Time)
 func (store *Store) Delete(key []byte) error{
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
-	delete(store.data,string(key)) //delete data for specific key
-	delete(store.expirationTime,string(key)) //delete expiration time for specific key
+	isPinned, isFound := store.pin[string(key)] //Get data that matches the key from the store
+	//Remove all data if the key is not pinned
+	if isFound && !isPinned{
+		delete(store.data, string(key))           //delete data for specific key
+		delete(store.expirationTime, string(key)) //delete expiration time for specific key
+		delete(store.pin, string(key)) //delete expiration time for specific key
+	}
 	return nil
 }

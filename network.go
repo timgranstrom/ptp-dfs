@@ -6,6 +6,7 @@ import (
 	"net"
 	"log"
 	"strconv"
+	"time"
 )
 
 // A buffered channel that we can send work requests on.
@@ -173,8 +174,8 @@ func (network *Network) SendFindDataMessage(hash string) {
 	// TODO
 }
 
-func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, requestId int64, isReply bool) {
-	storeMsg := network.protobufhandler.CreateStoreMessage(key,data) //Create a store message
+func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, lifeTime time.Duration, requestId int64, isReply bool) {
+	storeMsg := network.protobufhandler.CreateStoreMessage(key,data,lifeTime) //Create a store message
 	//Create wrapper message for the store message
 	wrapperMsg := network.protobufhandler.CreateWrapperMessage_4(network.routingTable.me.ID,requestId,protoMessages.MessageType_SEND_STORE,storeMsg,isReply)
 
@@ -224,3 +225,18 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 	//network.SendQueue <- sender //put sender on sender queue
 	//network.Send(workRequest.senderAddress,marshaledMsg)
 }
+
+/*Receive store message.
+Stores data with a specific key from the message in the key-value store.
+ */
+func (network *Network) RecieveStoreMessage(workRequest *WorkRequest) {
+	key := workRequest.message.GetMsg_4().KeyStore
+	data := workRequest.message.GetMsg_4().ValueStore
+	lifeTime,error := time.ParseDuration(workRequest.message.GetMsg_4().LifeTime)
+	if error != nil{
+		log.Fatal("COULDN'T PARSE LIFETIME!")
+	}
+	timeExpiration := time.Now().Add(lifeTime)
+	network.store.StoreData([]byte(key),[]byte(data),timeExpiration,false)
+}
+

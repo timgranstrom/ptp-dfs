@@ -203,12 +203,13 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 func (kademlia *Kademlia) Store(fileName string,data []byte) {
 	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
+	lifeTime := time.Minute //Set lifetime/duration of the data store
 	storeKadId := NewKademliaID(string(key)) //Make kademlia id out of the key
 	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
 	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data
 	worker := kademlia.NewWorker() //Just make a worker to get a unique message- and worker id.
 	for _,targetContact := range contactCandidates.contacts{
-		kademlia.network.SendStoreMessage(&targetContact,key,data,worker.id,false)
+		kademlia.network.SendStoreMessage(&targetContact,key,data,lifeTime,worker.id,false)
 	}
 
 }
