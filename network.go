@@ -237,6 +237,7 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 Stores data with a specific key from the message in the key-value store.
  */
 func (network *Network) RecieveStoreMessage(workRequest *WorkRequest) {
+
 	key := workRequest.message.GetMsg_4().KeyStore
 	data := workRequest.message.GetMsg_4().ValueStore
 	lifeTime,error := time.ParseDuration(workRequest.message.GetMsg_4().LifeTime)

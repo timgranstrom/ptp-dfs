@@ -65,10 +65,10 @@ func (dispatcher *Dispatcher) StartDispatcher() {
 							break
 						case protoMessages.MessageType_FIND_DATA:
 							log.Println(dispatcher.network.routingTable.me.Address," :Picked up FIND DATA from Message Queue")
-							dispatcher.network.RecieveStoreMessage(&work)
 							break
 						case protoMessages.MessageType_SEND_STORE:
 							log.Println(dispatcher.network.routingTable.me.Address," :Picked up SEND STORE from Message Queue")
+							dispatcher.network.RecieveStoreMessage(&work)
 							break
 						default:
 							log.Println(dispatcher.network.routingTable.me.Address," :Picked up UNKNOWN MESSAGE TYPE from Message Queue")

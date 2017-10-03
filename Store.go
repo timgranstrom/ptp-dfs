@@ -22,6 +22,8 @@ func MakeStore() *Store {
 	store.data = make(map[string][]byte)
 	store.mutex = &sync.Mutex{}
 	store.expirationTime = make(map[string]time.Time)
+	store.pin = make(map[string]bool)
+
 	return &store
 }
 
