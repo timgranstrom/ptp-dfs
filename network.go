@@ -18,12 +18,18 @@ type Network struct {
 	WorkerQueue chan Worker
 	WorkQueue chan WorkRequest
 	SendQueue chan Sender
+	PingQueue chan Ping
 	listenerActive bool
 }
 
 type Sender struct {
 	address string //Send to this address
 	data []byte
+}
+
+type Ping struct {
+	reply chan bool
+	target *Contact
 }
 
 func NewSender(address string, data *[]byte) *Sender{
@@ -38,7 +44,8 @@ func NewNetwork(routingTable RoutingTable) *Network{
 	network := &Network{routingTable:routingTable,
 			WorkerQueue: make(chan Worker,100),
 			WorkQueue:make(chan WorkRequest,100),
-			SendQueue:make(chan Sender,500)}
+			SendQueue:make(chan Sender,500),
+			PingQueue:make(chan Ping)}
 	return network
 }
 
@@ -125,7 +132,18 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 	//When handling work, make sure to always add the message sender as a contact
 	kadId := NewKademliaID(work.message.SenderKademliaId)
 	requestContact := NewContact(kadId,work.senderAddress)
-	network.routingTable.AddContact(requestContact)
+	pingContact := network.routingTable.AddContact(requestContact)
+	if pingContact != nil {
+		ping := Ping{ make(chan bool), pingContact }
+		network.PingQueue <- ping
+		select {
+			case reply := <- ping.reply:
+				if !reply {
+					pingContact = &requestContact
+					network.routingTable.AddContact(requestContact)
+				}
+		}
+	}
 	//log.Println(network.routingTable.me.Address+" :Received message from ",addr,": ADDED AS CONTACT")
 
 
@@ -137,8 +155,12 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 	//log.Println(network.routingTable.me.Address+": Work request queued")
 }
 
-func (network *Network) SendPingMessage(contact *Contact) {
-	// TODO
+func (network *Network) SendPingMessage(targetAddress string, requestId int64, isReply bool) {
+	pingContactMessage := network.protobufhandler.CreatePingMessage()
+	wrapperMessage := network.protobufhandler.CreateWrapperMessage_1(network.routingTable.me.ID, requestId, protoMessages.MessageType_PING, pingContactMessage, isReply)
+	data := network.protobufhandler.MarshalMessage(wrapperMessage)
+	sender := *NewSender(targetAddress, &data)
+	network.SendQueue <- sender
 }
 
 func (network *Network) SendFindContactMessage(targetContact *Contact, sendToContact *Contact, requestId int64, responseContacts []Contact,isReply bool) {
@@ -214,4 +236,8 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 	//sender := *NewSender(workRequest.senderAddress,&marshaledMsg) //Create sender to put on sender queue
 	//network.SendQueue <- sender //put sender on sender queue
 	//network.Send(workRequest.senderAddress,marshaledMsg)
+}
+
+func (network *Network) ReceivePingContactMessage(request *WorkRequest) {
+	network.SendPingMessage(request.senderAddress, request.id, true)
 }

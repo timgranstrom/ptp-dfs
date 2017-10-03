@@ -44,7 +44,14 @@ func (kademlia *Kademlia) Run(){
 	dispatcher.StartDispatcher() //always run
 
 	go kademlia.BoostrapProcess()
-
+	go func() {
+		for {
+			select {
+				case ping := <- kademlia.network.PingQueue:
+					go kademlia.PingContact(ping)
+			}
+		}
+	}()
 }
 
 func (kademlia *Kademlia) BoostrapProcess(){
@@ -230,5 +237,16 @@ func (kademlia *Kademlia) Store(data []byte) {
 			print(contact.Address) //Just temporary to avoid errors when compiling
 			// TODO Create and send store request to contact
 		}()
+	}
+}
+
+func (kademlia *Kademlia) PingContact(ping Ping) {
+	worker := kademlia.NewWorker()
+	kademlia.network.SendPingMessage(ping.target.Address, worker.id, false)
+	select {
+		case <- worker.workRequest:
+			ping.reply <- true
+		case <- time.NewTimer(time.Second * 3).C:
+			ping.reply <- false
 	}
 }
