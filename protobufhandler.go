@@ -5,6 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	//"log"
 	"log"
+	"time"
 )
 
 type ProtobufHandler struct{}
@@ -196,10 +197,11 @@ func (protobufHandler *ProtobufHandler) CreatePingMessage() *protoMessages.PingM
 /*
 Create a Store Message
  */
-func (protobufHandler *ProtobufHandler) CreateStoreMessage(kademliaId *KademliaID, address string) *protoMessages.StoreMessage{
+func (protobufHandler *ProtobufHandler) CreateStoreMessage(key []byte, data []byte,lifeTime time.Duration) *protoMessages.StoreMessage{
 	storeMessage := &protoMessages.StoreMessage{
-		KeyStore: kademliaId.String(), //Set kademlia id as key
-		ValueStore: address, //Set ip address as stored value
+		KeyStore: string(key), //Set kademlia id as key
+		ValueStore: string(data), //Set ip address as stored value
+		LifeTime: lifeTime.String(),
 	}
 	return storeMessage
 }

@@ -14,11 +14,11 @@ type KademliaID [IDLength]byte
  */
 func NewKademliaID(data string) *KademliaID {
 	//Returns the bytes represented by the hexadecimal string data.
-	decoded, _ := hex.DecodeString(data) //decoded = the bits, _ = ignore the error returned if any.
+	decoded, _ := hex.DecodeString(data) //decoded = the byte, _ = ignore the error returned if any.
 
 	newKademliaID := KademliaID{} //Create a new empty KademliaID
 	for i := 0; i < IDLength; i++ {
-		newKademliaID[i] = decoded[i] //Add bits to KademliaID.
+		newKademliaID[i] = decoded[i] //Add bytes to KademliaID.
 	}
 
 	return &newKademliaID //Return the Address of the kademliaID.

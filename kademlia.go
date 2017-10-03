@@ -60,11 +60,10 @@ func (kademlia *Kademlia) BoostrapProcess(){
 	log.Println(kademlia.network.routingTable.me.Address,"###########Finished Bootstrapping process###########")
 }
 
-func (kademlia *Kademlia) LookupContact(target *Contact) {
+func (kademlia *Kademlia) LookupContact(target *Contact) ContactCandidates{
 	workRecievedCount := 0
 	expectedWorkCount := 0
-	//wrcTest := make(chan int)
-
+	timeoutTimer := time.NewTimer(time.Second * 3)
 	worker := kademlia.NewWorker() //Create a worker that maps to the function
 	//log.Println(kademlia.routingTable.me.Address+" :[Lookup Contact] was called internally, ID: ",worker.id)
 
@@ -140,6 +139,10 @@ lookForRepliesChannel:
 						//TODO: SET GO ROUTINE HERE AGAIN
 						kademlia.network.SendFindContactMessage(target,&contact,worker.id,[]Contact{},false) //Fire off a new find contact request for each contact
 					}
+					//Reset timer if you have new contacts to send messages to
+					if len(newContacts) > 0{
+						timeoutTimer.Reset(time.Second*3)
+					}
 
 					//log.Println(kademlia.routingTable.me.Address,":---------------------  Work expected count:",expectedWorkCount)
 
@@ -157,15 +160,18 @@ lookForRepliesChannel:
 						// TODO Goroutine to create and send request to new contact
 				// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
 					// TODO Close the loop
+			case <- timeoutTimer.C:
+				log.Println(kademlia.routingTable.me.Address,": TIMER EXPIRED\n")
+				break lookForRepliesChannel
 			default:
 				if workRecievedCount == expectedWorkCount{
 					break lookForRepliesChannel
 				}
-
 			}
 		}
+	close(worker.workRequest) //Close the worker channel
 	log.Println(kademlia.routingTable.me.Address,": Finished [Find Contact]\n")
-
+	return contacts
 	// TODO Return closest contacts
 }
 
@@ -235,34 +241,15 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 	}
 }
 
-func (kademlia *Kademlia) Store(data []byte) {
-	worker := kademlia.NewWorker()
-	contacts := kademlia.routingTable.FindClosestContacts(NewKademliaID(string(data)),3) //Retrieve nodes own closest contacts
-	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
-		go func() { //Send requests concurrently
-			print(contact.Address) //Just temporary to avoid errors when compiling
-			// TODO Create and send lookupcontact request to contact
-		}()
+func (kademlia *Kademlia) Store(fileName string,data []byte) {
+	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
+	lifeTime := time.Minute //Set lifetime/duration of the data store
+	storeKadId := NewKademliaID(string(key)) //Make kademlia id out of the key
+	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
+	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data
+	worker := kademlia.NewWorker() //Just make a worker to get a unique message- and worker id.
+	for _,targetContact := range contactCandidates.contacts{
+		kademlia.network.SendStoreMessage(&targetContact,key,data,lifeTime,worker.id,false)
 	}
-	for {
-		select {
-			case reply := <- worker.workRequest: //Idle wait for replies to requests
-				print(reply.id) //Just temporary to avoid errors when compiling
-				// TODO If reply has closer contacts than any in the contact list
-					// TODO Push the new closer contact, pop the furthest
-					// TODO Goroutine to create and send request to new contact
-				// TODO Else...
-					// TODO If it was last reply
-						// TODO Close the loop
-			// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
-				// TODO Close the loop
-		}
-	}
-	//Now we've found closest nodes to send store requests to
-	for _, contact := range contacts {
-		go func() {
-			print(contact.Address) //Just temporary to avoid errors when compiling
-			// TODO Create and send store request to contact
-		}()
-	}
+
 }
