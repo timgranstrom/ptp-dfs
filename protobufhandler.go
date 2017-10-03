@@ -207,9 +207,10 @@ func (protobufHandler *ProtobufHandler) CreateStoreMessage(kademliaId *KademliaI
 /*
 Create a Lookup Data Message
  */
-func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *KademliaID) *protoMessages.LookupDataMessage{
+func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *KademliaID, foundFile bool) *protoMessages.LookupDataMessage{
 	lookupDataMessage := &protoMessages.LookupDataMessage{
 		KademliaTargetId: kademliaId.String(),
+		FoundFile: foundFile,
 	}
 	return lookupDataMessage
 }

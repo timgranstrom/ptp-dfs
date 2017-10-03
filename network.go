@@ -6,6 +6,7 @@ import (
 	"net"
 	"log"
 	"strconv"
+	"encoding/hex"
 )
 
 // A buffered channel that we can send work requests on.
@@ -167,8 +168,15 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 
 }
 
-func (network *Network) SendFindDataMessage(targetHash string, sendToContact Contact, requestID int64, isReply bool, replyContacts []Contact) {
-	// TODO
+func (network *Network) SendFindDataMessage(targetId *KademliaID, sendToContact Contact, requestID int64, isReply bool, foundFile bool, data []byte, responseContacts []Contact) {
+	findDataMessage := network.protobufhandler.CreateLookupDataMessage(targetId, foundFile)
+	if (isReply) {
+		if (foundFile) {
+			
+		} else {
+
+		}
+	}
 }
 
 func (network *Network) SendStoreMessage(data []byte) {

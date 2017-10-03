@@ -170,16 +170,17 @@ lookForRepliesChannel:
 }
 
 func (kademlia *Kademlia) LookupData(targetHash string) {
+	targetId := NewKademliaID(targetHash)
 	workRecievedCount, expectedWorkCount := 0, 0 //Keep track of how many requests and replies have been sent
 	worker := kademlia.NewWorker() //Identity of the process running
-	defer close(worker.workRequest)
+	defer close(worker.workRequest) //Make sure worker is taken out of worker queue when done
 	contactCandidates := ContactCandidates{kademlia.routingTable.FindClosestContacts(NewKademliaID(targetHash),3) } //Retrieve nodes own closest contacts
 
 	log.Println(kademlia.routingTable.me.Address,": Started LOOKUP_DATA ", worker.id, " for hash ", targetHash)
 
 	go func(contacts []Contact, count *int) { //Send requests concurrently
 		for _, contact := range contacts {
-			kademlia.network.SendFindDataMessage(targetHash, contact, worker.id, false, nil)
+			kademlia.network.SendFindDataMessage(*targetId, contact, worker.id, false, false, nil, nil)
 			*count++
 		}
 	}(contactCandidates.contacts, &workRecievedCount)
@@ -194,9 +195,9 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 				
 				//See if the reply contains the address to the where the data is located
 				if reply.message.GetMsg_3().GetFoundFile() {
-					// TODO Download data
+					// TODO Store data
 					// TODO Create and send store request to next closest node(s?)
-					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " found, downloaded and published data")
+					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " downloaded and published data")
 					break LookupDataLoop //Process finished with what it intended to do
 					
 				//Otherwise, see what can be done with the replies' closest contacts instead
@@ -211,7 +212,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 					if len(newContactCandidates) > 0 {
 						go func(contacts []Contact, count *int) { //Send requests concurrently
 							for _, contact := range contacts {
-								kademlia.network.SendFindDataMessage(targetHash, contact, worker.id, false, nil)
+								kademlia.network.SendFindDataMessage(*targetId, contact, worker.id, false, false, nil, nil)
 								*count++
 							}
 						}(newContactCandidates, &workRecievedCount)
