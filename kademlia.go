@@ -6,6 +6,7 @@ import (
 	//"ptp/proto"
 	"log"
 	"time"
+	"crypto/sha1"
 )
 
 type Kademlia struct {
@@ -60,7 +61,7 @@ func (kademlia *Kademlia) BoostrapProcess(){
 	log.Println(kademlia.network.routingTable.me.Address,"###########Finished Bootstrapping process###########")
 }
 
-func (kademlia *Kademlia) LookupContact(target *Contact) {
+func (kademlia *Kademlia) LookupContact(target *Contact) ContactCandidates{
 	workRecievedCount := 0
 	expectedWorkCount := 0
 	timeoutTimer := time.NewTimer(time.Second * 3)
@@ -171,7 +172,7 @@ lookForRepliesChannel:
 		}
 	close(worker.workRequest) //Close the worker channel
 	log.Println(kademlia.routingTable.me.Address,": Finished [Find Contact]\n")
-
+	return contacts
 	// TODO Return closest contacts
 }
 
@@ -201,10 +202,19 @@ func (kademlia *Kademlia) LookupData(hash string) {
 	}
 }
 
-func (kademlia *Kademlia) Store(data []byte) {
-	worker := kademlia.NewWorker()
-	contacts := kademlia.routingTable.FindClosestContacts(NewKademliaID(string(data)),3) //Retrieve nodes own closest contacts
-	for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
+func (kademlia *Kademlia) Store(fileName string,data []byte) {
+	shaHash := sha1.New() //Create a hash
+	shaHash.Write([]byte(shaHash)) //Write filename to the sha1 hash
+	hashResult := shaHash.Sum(nil) //Get the finalized hash result
+
+	storeKadId := NewKademliaID(string(hashResult)) //Make key out of the first 20 bytes of hashed data
+	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
+	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data
+
+	//kademlia.network.SendStoreMessage()
+	//worker := kademlia.NewWorker()
+	//contacts := kademlia.routingTable.FindClosestContacts(NewKademliaID(string(data)),3) //Retrieve nodes own closest contacts
+	/*for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
 		go func() { //Send requests concurrently
 			print(contact.Address) //Just temporary to avoid errors when compiling
 			// TODO Create and send lookupcontact request to contact
@@ -230,5 +240,5 @@ func (kademlia *Kademlia) Store(data []byte) {
 			print(contact.Address) //Just temporary to avoid errors when compiling
 			// TODO Create and send store request to contact
 		}()
-	}
+	}*/
 }
