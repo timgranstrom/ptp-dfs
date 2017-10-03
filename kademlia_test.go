@@ -5,6 +5,7 @@ import (
 	"time"
 	"io/ioutil"
 	"log"
+	"github.com/timgranstrom/ptp-dfs/daemons"
 )
 
 func TestRunKademliaInstances(t *testing.T){
@@ -65,9 +66,10 @@ func TestStoreKademlia(t *testing.T) {
 	go node2.Run()
 	time.Sleep(time.Second)
 
-	storeLocation := "main/file.txt"
-	b, _ := ioutil.ReadFile(storeLocation) // Take out the content of the file in byte
-	hashKey := node1.Store("file.txt",b)
+	ds := daemons.NewDaemonService()
+	fileName, path := ds.ParseFilePathCommand("main/file.txt")
+	b, _ := ioutil.ReadFile(path) // Take out the content of the file in byte
+	hashKey := node1.Store(fileName,b)
 	time.Sleep(time.Second)
 	data,isFound := node2.network.store.RetrieveData(hashKey)
 	if isFound{
@@ -76,6 +78,4 @@ func TestStoreKademlia(t *testing.T) {
 		log.Fatal("Did not find expected file")
 	}
 	time.Sleep(time.Second)
-
-	//node1.Store()
 }
