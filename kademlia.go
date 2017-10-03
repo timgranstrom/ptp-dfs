@@ -1,9 +1,7 @@
 package ptp
 
 import (
-	//"github.com/golang/protobuf/proto"
 	"container/list"
-	//"ptp/proto"
 	"log"
 	"time"
 	"encoding/hex"
