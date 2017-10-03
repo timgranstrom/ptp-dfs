@@ -241,8 +241,8 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 	}
 }
 
-func (kademlia *Kademlia) Store(fileName string,data []byte) {
-	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
+func (kademlia *Kademlia) Store(fileName string,data []byte) (key []byte) {
+	key = kademlia.network.store.GetKey(fileName) //Get the finalized hash result
 	lifeTime := time.Minute //Set lifetime/duration of the data store
 	storeKadId := NewKademliaID(string(key)) //Make kademlia id out of the key
 	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
@@ -251,5 +251,5 @@ func (kademlia *Kademlia) Store(fileName string,data []byte) {
 	for _,targetContact := range contactCandidates.contacts{
 		kademlia.network.SendStoreMessage(&targetContact,key,data,lifeTime,worker.id,false)
 	}
-
+	return key
 }
