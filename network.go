@@ -19,6 +19,7 @@ type Network struct {
 	WorkQueue chan WorkRequest
 	SendQueue chan Sender
 	listenerActive bool
+	store Store
 }
 
 type Sender struct {
@@ -38,7 +39,8 @@ func NewNetwork(routingTable RoutingTable) *Network{
 	network := &Network{routingTable:routingTable,
 			WorkerQueue: make(chan Worker,100),
 			WorkQueue:make(chan WorkRequest,100),
-			SendQueue:make(chan Sender,500)}
+			SendQueue:make(chan Sender,500),
+			store: *MakeStore()}
 	return network
 }
 
@@ -171,8 +173,15 @@ func (network *Network) SendFindDataMessage(hash string) {
 	// TODO
 }
 
-func (network *Network) SendStoreMessage(targetContact *Contact,data []byte) {
-	// TODO
+func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, requestId int64, isReply bool) {
+	storeMsg := network.protobufhandler.CreateStoreMessage(key,data) //Create a store message
+	//Create wrapper message for the store message
+	wrapperMsg := network.protobufhandler.CreateWrapperMessage_4(network.routingTable.me.ID,requestId,protoMessages.MessageType_SEND_STORE,storeMsg,isReply)
+
+	marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg) //Marshal the message for network transport
+
+	sender := *NewSender(sendToContact.Address,&marshaledMsg) //Create sender to put on sender queue
+	network.SendQueue <- sender                       //put sender on sender queue
 }
 
 //RENAME "PROTOCONTACT" TO PROTOCONTACT INSTEAD OF CONTACT

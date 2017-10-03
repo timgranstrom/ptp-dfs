@@ -6,7 +6,6 @@ import (
 	//"ptp/proto"
 	"log"
 	"time"
-	"crypto/sha1"
 )
 
 type Kademlia struct {
@@ -203,42 +202,13 @@ func (kademlia *Kademlia) LookupData(hash string) {
 }
 
 func (kademlia *Kademlia) Store(fileName string,data []byte) {
-	shaHash := sha1.New() //Create a hash
-	shaHash.Write([]byte(shaHash)) //Write filename to the sha1 hash
-	hashResult := shaHash.Sum(nil) //Get the finalized hash result
-
-	storeKadId := NewKademliaID(string(hashResult)) //Make key out of the first 20 bytes of hashed data
+	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
+	storeKadId := NewKademliaID(string(key)) //Make kademlia id out of the key
 	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
 	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data
+	worker := kademlia.NewWorker() //Just make a worker to get a unique message- and worker id.
+	for _,targetContact := range contactCandidates.contacts{
+		kademlia.network.SendStoreMessage(&targetContact,key,data,worker.id,false)
+	}
 
-	//kademlia.network.SendStoreMessage()
-	//worker := kademlia.NewWorker()
-	//contacts := kademlia.routingTable.FindClosestContacts(NewKademliaID(string(data)),3) //Retrieve nodes own closest contacts
-	/*for _, contact := range contacts { //Send request to nodes own closests contacts for their closests contacts
-		go func() { //Send requests concurrently
-			print(contact.Address) //Just temporary to avoid errors when compiling
-			// TODO Create and send lookupcontact request to contact
-		}()
-	}
-	for {
-		select {
-			case reply := <- worker.workRequest: //Idle wait for replies to requests
-				print(reply.id) //Just temporary to avoid errors when compiling
-				// TODO If reply has closer contacts than any in the contact list
-					// TODO Push the new closer contact, pop the furthest
-					// TODO Goroutine to create and send request to new contact
-				// TODO Else...
-					// TODO If it was last reply
-						// TODO Close the loop
-			// TODO Timeout case for when requestees don't reply fast enough (might be disconnected/dead/slow)
-				// TODO Close the loop
-		}
-	}
-	//Now we've found closest nodes to send store requests to
-	for _, contact := range contacts {
-		go func() {
-			print(contact.Address) //Just temporary to avoid errors when compiling
-			// TODO Create and send store request to contact
-		}()
-	}*/
 }
