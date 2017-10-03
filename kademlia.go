@@ -186,7 +186,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 
 	go func(contacts []Contact, count *int) { //Send requests concurrently
 		for _, contact := range contacts {
-			kademlia.network.SendFindDataMessage(*targetId, contact, worker.id, false, false, nil, nil)
+			kademlia.network.SendFindDataMessage(targetId, contact, worker.id, false, false, nil, nil)
 			*count++
 		}
 	}(contactCandidates.contacts, &workRecievedCount)
@@ -218,7 +218,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 					if len(newContactCandidates) > 0 {
 						go func(contacts []Contact, count *int) { //Send requests concurrently
 							for _, contact := range contacts {
-								kademlia.network.SendFindDataMessage(*targetId, contact, worker.id, false, false, nil, nil)
+								kademlia.network.SendFindDataMessage(targetId, contact, worker.id, false, false, nil, nil)
 								*count++
 							}
 						}(newContactCandidates, &workRecievedCount)

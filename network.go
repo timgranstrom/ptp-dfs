@@ -6,7 +6,6 @@ import (
 	"net"
 	"log"
 	"strconv"
-	"encoding/hex"
 	"time"
 )
 
@@ -172,7 +171,7 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 }
 
 func (network *Network) SendFindDataMessage(targetId *KademliaID, sendToContact Contact, requestID int64, isReply bool, foundFile bool, data []byte, responseContacts []Contact) {
-	findDataMessage := network.protobufhandler.CreateLookupDataMessage(targetId, foundFile)
+	//findDataMessage := network.protobufhandler.CreateLookupDataMessage(targetId, foundFile)
 	if (isReply) {
 		if (foundFile) {
 			
