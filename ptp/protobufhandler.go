@@ -5,6 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	//"log"
 	"log"
+	"time"
 )
 
 type ProtobufHandler struct{}
@@ -196,10 +197,11 @@ func (protobufHandler *ProtobufHandler) CreatePingMessage() *protoMessages.PingM
 /*
 Create a Store Message
  */
-func (protobufHandler *ProtobufHandler) CreateStoreMessage(kademliaId *KademliaID, address string) *protoMessages.StoreMessage{
+func (protobufHandler *ProtobufHandler) CreateStoreMessage(key []byte, data []byte,lifeTime time.Duration) *protoMessages.StoreMessage{
 	storeMessage := &protoMessages.StoreMessage{
-		KeyStore: kademliaId.String(), //Set kademlia id as key
-		ValueStore: address, //Set ip address as stored value
+		KeyStore: string(key), //Set kademlia id as key
+		ValueStore: string(data), //Set ip address as stored value
+		LifeTime: lifeTime.String(),
 	}
 	return storeMessage
 }
@@ -207,10 +209,25 @@ func (protobufHandler *ProtobufHandler) CreateStoreMessage(kademliaId *KademliaI
 /*
 Create a Lookup Data Message
  */
-func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *KademliaID) *protoMessages.LookupDataMessage{
+func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *KademliaID, foundFile bool) *protoMessages.LookupDataMessage{
 	lookupDataMessage := &protoMessages.LookupDataMessage{
 		KademliaTargetId: kademliaId.String(),
+		FoundFile: foundFile,
 	}
 	return lookupDataMessage
+}
+
+func ConvertProtobufContacts(protoContacts []*protoMessages.ProtoContact, me Contact) []Contact {
+	contacts := []Contact{}
+	for _,protoContact := range protoContacts {
+		protoKademliaID := NewKademliaID(protoContact.GetKademliaId())
+		if me.ID != protoKademliaID {
+			replyContact := NewContact(protoKademliaID, protoContact.GetAddress())
+			contacts = append(contacts, replyContact)
+		} else {
+			log.Println(me.Address,": Filtered from sending LOOKUP_DATA message to self")
+		}
+	}
+	return contacts
 }
 

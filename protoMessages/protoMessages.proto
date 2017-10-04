@@ -41,11 +41,14 @@ message ProtoContact {
 //Sub-header to find data with a certain id, returns closer contacts if it wasn't found
 message LookupDataMessage {
 	string kademlia_target_id = 1; //Id of target data
-	repeated ProtoContact contacts = 2; //If target wasn't found, return closer contacts
+	bool found_file = 2; //If file were found or not, only for replies
+	string file_data = 3; //If file were found, return the data
+	repeated ProtoContact contacts = 4; //If file wasn't found, return closer contacts
 }
 
 //Sub-header to share where a nodes shared data can be found
 message StoreMessage {
 	string key_store = 1; //Key should be kademliaID
 	string value_store = 2; //Value should be IP Address of node holding
+	string life_time = 3; //Duration/amount of time that the data should stay be stored
 }

@@ -6,6 +6,7 @@ import (
 	"net"
 	"log"
 	"strconv"
+	"time"
 )
 
 // A buffered channel that we can send work requests on.
@@ -20,6 +21,7 @@ type Network struct {
 	SendQueue chan Sender
 	PingQueue chan Ping
 	listenerActive bool
+	store Store
 }
 
 type Sender struct {
@@ -45,7 +47,8 @@ func NewNetwork(routingTable RoutingTable) *Network{
 			WorkerQueue: make(chan Worker,100),
 			WorkQueue:make(chan WorkRequest,100),
 			SendQueue:make(chan Sender,500),
-			PingQueue:make(chan Ping)}
+			PingQueue:make(chan Ping),
+			store: *MakeStore()}
 	return network
 }
 
@@ -189,12 +192,26 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 
 }
 
-func (network *Network) SendFindDataMessage(hash string) {
-	// TODO
+func (network *Network) SendFindDataMessage(targetId *KademliaID, sendToContact Contact, requestID int64, isReply bool, foundFile bool, data []byte, responseContacts []Contact) {
+	//findDataMessage := network.protobufhandler.CreateLookupDataMessage(targetId, foundFile)
+	if (isReply) {
+		if (foundFile) {
+			
+		} else {
+
+		}
+	}
 }
 
-func (network *Network) SendStoreMessage(data []byte) {
-	// TODO
+func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, lifeTime time.Duration, requestId int64, isReply bool) {
+	storeMsg := network.protobufhandler.CreateStoreMessage(key,data,lifeTime) //Create a store message
+	//Create wrapper message for the store message
+	wrapperMsg := network.protobufhandler.CreateWrapperMessage_4(network.routingTable.me.ID,requestId,protoMessages.MessageType_SEND_STORE,storeMsg,isReply)
+
+	marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg) //Marshal the message for network transport
+
+	sender := *NewSender(sendToContact.Address,&marshaledMsg) //Create sender to put on sender queue
+	network.SendQueue <- sender                       //put sender on sender queue
 }
 
 //RENAME "PROTOCONTACT" TO PROTOCONTACT INSTEAD OF CONTACT
@@ -240,4 +257,19 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 
 func (network *Network) ReceivePingContactMessage(request *WorkRequest) {
 	network.SendPingMessage(request.senderAddress, request.id, true)
+}
+
+/*Receive store message.
+Stores data with a specific key from the message in the key-value store.
+ */
+func (network *Network) RecieveStoreMessage(workRequest *WorkRequest) {
+
+	key := workRequest.message.GetMsg_4().KeyStore
+	data := workRequest.message.GetMsg_4().ValueStore
+	lifeTime,error := time.ParseDuration(workRequest.message.GetMsg_4().LifeTime)
+	if error != nil{
+		log.Fatal("COULDN'T PARSE LIFETIME!")
+	}
+	timeExpiration := time.Now().Add(lifeTime)
+	network.store.StoreData([]byte(key),[]byte(data),timeExpiration,false)
 }

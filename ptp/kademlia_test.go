@@ -3,6 +3,9 @@ package ptp
 import (
 	"testing"
 	"time"
+	"io/ioutil"
+	"log"
+	"encoding/hex"
 )
 
 func TestRunKademliaInstances(t *testing.T){
@@ -51,4 +54,29 @@ func TestRunKademliaInstances(t *testing.T){
 	//time.Sleep(time.Second*10)
 
 	//time.Sleep(time.Second)*/
+}
+
+func TestStoreKademlia(t *testing.T) {
+	//Create nodes
+	node1 := NewKademlia(":8001", nil) //Original node
+	node2 := NewKademlia(":8002", &node1.routingTable.me) //Original node
+	time.Sleep(time.Second)
+	go node1.Run()
+	time.Sleep(time.Second)
+	go node2.Run()
+	time.Sleep(time.Second)
+
+	ds := NewDaemonService()
+	fileName, path := ds.ParseFilePathCommand("main/file.txt")
+	b, _ := ioutil.ReadFile(path) // Take out the content of the file in byte
+	hashKey := node1.Store(fileName,b)
+	time.Sleep(time.Second)
+	data,_ := hex.DecodeString(hashKey)
+	data,isFound := node2.network.store.RetrieveData(data)
+	if isFound{
+		log.Println("DATA CONTENT: \n",string(data))
+	} else{
+		log.Fatal("Did not find expected file")
+	}
+	time.Sleep(time.Second)
 }
