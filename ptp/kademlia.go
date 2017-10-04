@@ -187,6 +187,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 	worker := kademlia.NewWorker() //Identity of the process running
 	defer close(worker.workRequest) //Make sure worker is taken out of worker queue when done
 	contactCandidates := ContactCandidates{kademlia.routingTable.FindClosestContacts(NewKademliaID(targetHash),3) } //Retrieve nodes own closest contacts
+	latestNonFileContact := &Contact{} //Contact to send store request to if data is found
 
 	log.Println(kademlia.routingTable.me.Address,": Started LOOKUP_DATA ", worker.id, " for hash ", targetHash)
 
@@ -207,13 +208,27 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 				
 				//See if the reply contains the address to the where the data is located
 				if reply.message.GetMsg_3().GetFoundFile() {
-					// TODO Store data
-					// TODO Create and send store request to next closest node(s?)
-					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " downloaded and published data")
+
+					//Extract information to store the data
+					data,err := hex.DecodeString(reply.message.GetMsg_3().FileData)
+					CheckError(err)
+					key,err := hex.DecodeString(targetHash)
+					CheckError(err)
+					kademlia.network.store.StoreData(key, data, time.Now().Add(time.Minute), false) //Store the data
+
+					//See if there is a contact to send a store request to
+					if latestNonFileContact != nil {
+						kademlia.network.SendStoreMessage(latestNonFileContact, key, data, time.Second*30, worker.id, false)
+					}
+
+					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " found the data")
 					break LookupDataLoop //Process finished with what it intended to do
 					
 				//Otherwise, see what can be done with the replies' closest contacts instead
 				} else {
+					//Save the contact
+					latestNonFileContact = &Contact{ NewKademliaID(reply.message.SenderKademliaId), reply.senderAddress, nil }
+
 					//Extract contacts from reply and filter out self
 					replyContacts := ConvertProtobufContacts(reply.message.GetMsg_3().GetContacts(), kademlia.routingTable.me)
 					

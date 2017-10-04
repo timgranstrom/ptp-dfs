@@ -209,11 +209,17 @@ func (protobufHandler *ProtobufHandler) CreateStoreMessage(key []byte, data []by
 /*
 Create a Lookup Data Message
  */
-func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *KademliaID, foundFile bool) *protoMessages.LookupDataMessage{
+func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *KademliaID, foundFile bool, data []byte, contacts []Contact) *protoMessages.LookupDataMessage{
 	lookupDataMessage := &protoMessages.LookupDataMessage{
 		KademliaTargetId: kademliaId.String(),
 		FoundFile: foundFile,
 	}
+	if foundFile {
+		lookupDataMessage.FileData = string(data)
+	} else {
+		lookupDataMessage.Contacts = protobufHandler.CreateContactMessages(contacts)
+	}
+
 	return lookupDataMessage
 }
 

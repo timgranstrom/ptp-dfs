@@ -7,6 +7,8 @@ import (
 	"log"
 	"strconv"
 	"time"
+	"encoding/hex"
+	"go/types"
 )
 
 // A buffered channel that we can send work requests on.
@@ -193,14 +195,14 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 }
 
 func (network *Network) SendFindDataMessage(targetId *KademliaID, sendToContact Contact, requestID int64, isReply bool, foundFile bool, data []byte, responseContacts []Contact) {
-	//findDataMessage := network.protobufhandler.CreateLookupDataMessage(targetId, foundFile)
-	if (isReply) {
-		if (foundFile) {
-			
-		} else {
+	//Create the message and marshal it
+	findDataMessage := network.protobufhandler.CreateLookupDataMessage(targetId, foundFile, data, responseContacts)
+	wrapperMsg := network.protobufhandler.CreateWrapperMessage_3(targetId, requestID, protoMessages.MessageType_FIND_DATA, findDataMessage, isReply)
+	marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg)
 
-		}
-	}
+	//Send the message with the queue
+	sender := *NewSender(sendToContact.Address, &marshaledMsg)
+	network.SendQueue <- sender
 }
 
 func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, lifeTime time.Duration, requestId int64, isReply bool) {
@@ -257,6 +259,18 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 
 func (network *Network) ReceivePingContactMessage(request *WorkRequest) {
 	network.SendPingMessage(request.senderAddress, request.id, true)
+}
+
+func (network *Network) ReceiveFindDataMessage(request *WorkRequest) {
+	contacts := []Contact{}
+	targetId := NewKademliaID(request.message.GetMsg_3().KademliaTargetId)
+	targetIdBytes,err := hex.DecodeString(request.message.GetMsg_3().KademliaTargetId)
+	CheckError(err)
+	data, isFound := network.store.RetrieveData(targetIdBytes)
+	if !isFound {
+		contacts = network.routingTable.FindClosestContacts(targetId, 3)
+	}
+	network.SendFindDataMessage(targetId, NewContact(nil, request.senderAddress), request.id, true, isFound, data, contacts)
 }
 
 /*Receive store message.
