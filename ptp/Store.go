@@ -13,6 +13,8 @@ type Store struct{
 	mutex *sync.Mutex
 	data map[string][]byte
 	expirationTime map[string]time.Time
+	republishTime map[string]time.Time
+	lifeTimeDuration map[string]time.Duration
 	pin map[string]bool
 }
 
@@ -22,8 +24,9 @@ func MakeStore() *Store {
 	store.data = make(map[string][]byte)
 	store.mutex = &sync.Mutex{}
 	store.expirationTime = make(map[string]time.Time)
+	store.republishTime = make(map[string]time.Time)
+	store.lifeTimeDuration = make(map[string]time.Duration)
 	store.pin = make(map[string]bool)
-
 	return &store
 }
 
@@ -44,6 +47,26 @@ func (store *Store) RetrieveExpirationTime(key []byte) (time time.Time, isFound 
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
 	time, isFound = store.expirationTime[string(key)] //Get data that matches the key from the store
+	return time,isFound
+}
+
+/**
+Retrieve the expiration time for a key from the store
+ */
+func (store *Store) RetrieveRepublishTime(key []byte) (time time.Time, isFound bool){
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	time, isFound = store.republishTime[string(key)] //Get data that matches the key from the store
+	return time,isFound
+}
+
+/**
+Retrieve the expiration time for a key from the store
+ */
+func (store *Store) RetrieveLifeTimeDuration(key []byte) (time time.Duration, isFound bool){
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	time, isFound = store.lifeTimeDuration[string(key)] //Get data that matches the key from the store
 	return time,isFound
 }
 
@@ -76,11 +99,12 @@ func (store *Store) GetKey(fileName string) []byte {
 /**
 Store data and expiration time for a specific key
  */
-func (store *Store) StoreData(key []byte, data []byte, expirationTime time.Time,pinned bool) error{
+func (store *Store) StoreData(key []byte, data []byte, lifetimeDuration time.Duration, republishTime time.Time,pinned bool) error{
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
 	store.data[string(key)] = data
-	store.expirationTime[string(key)] = expirationTime
+	store.expirationTime[string(key)] = time.Now().Add(lifetimeDuration)
+	store.republishTime[string(key)] = republishTime
 	store.pin[string(key)] = pinned
 	return nil
 }
@@ -96,6 +120,8 @@ func (store *Store) Delete(key []byte) error{
 	if isFound && !isPinned{
 		delete(store.data, string(key))           //delete data for specific key
 		delete(store.expirationTime, string(key)) //delete expiration time for specific key
+		delete(store.lifeTimeDuration, string(key)) //delete lifetime time for specific key
+		delete(store.republishTime, string(key)) //delete republish time for specific key
 		delete(store.pin, string(key)) //delete expiration time for specific key
 	}
 	return nil

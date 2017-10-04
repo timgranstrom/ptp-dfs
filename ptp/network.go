@@ -270,6 +270,6 @@ func (network *Network) RecieveStoreMessage(workRequest *WorkRequest) {
 	if error != nil{
 		log.Fatal("COULDN'T PARSE LIFETIME!")
 	}
-	timeExpiration := time.Now().Add(lifeTime)
-	network.store.StoreData([]byte(key),[]byte(data),timeExpiration,false)
+	republishTime := time.Now().Add(time.Minute) //TODO set to be 24 hours after testing
+	network.store.StoreData([]byte(key),[]byte(data),lifeTime,republishTime,false)
 }
