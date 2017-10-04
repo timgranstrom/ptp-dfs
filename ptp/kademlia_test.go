@@ -80,3 +80,21 @@ func TestStoreKademlia(t *testing.T) {
 	}
 	time.Sleep(time.Second)
 }
+
+func TestPingKademlia(t *testing.T) {
+	//Create nodes
+	node1 := NewKademlia(":8001", nil) //Original node
+	node2 := NewKademlia(":8002", &node1.routingTable.me) //Original node
+	time.Sleep(time.Second)
+	go node1.Run()
+	time.Sleep(time.Second)
+	go node2.Run()
+	time.Sleep(time.Second)
+
+	if node1.PingContact(Ping{ make(chan bool), &node2.routingTable.me}) {
+		log.Println("Successfully pinged the other contact")
+	} else {
+		log.Println("Failed to ping contact, test failed")
+		t.Failed()
+	}
+}

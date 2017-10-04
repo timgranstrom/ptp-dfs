@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 	"encoding/hex"
-	"go/types"
 )
 
 // A buffered channel that we can send work requests on.

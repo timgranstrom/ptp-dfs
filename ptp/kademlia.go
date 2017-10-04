@@ -216,7 +216,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 					CheckError(err)
 					key,err := hex.DecodeString(targetHash)
 					CheckError(err)
-					kademlia.network.store.StoreData(key, data, time.Now().Add(time.Minute), false) //Store the data
+					kademlia.network.store.StoreData(key, data, time.Minute, time.Now().Add(time.Second*30), false) //Store the data
 
 					//See if there is a contact to send a store request to
 					if latestNonFileContact != nil {
@@ -286,13 +286,15 @@ func (kademlia *Kademlia) GetMe() Contact{
 	return kademlia.routingTable.me
 }
 
-func (kademlia *Kademlia) PingContact(ping Ping) {
+func (kademlia *Kademlia) PingContact(ping Ping) bool {
 	worker := kademlia.NewWorker()
 	kademlia.network.SendPingMessage(ping.target.Address, worker.id, false)
 	select {
 		case <- worker.workRequest:
 			ping.reply <- true
+			return true
 		case <- time.NewTimer(time.Second * 3).C:
 			ping.reply <- false
+			return false
 	}
 }
