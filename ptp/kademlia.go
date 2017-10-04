@@ -251,7 +251,7 @@ func (kademlia *Kademlia) Store(fileName string,data []byte) (keyEncoded string)
 	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
 	keyEncoded = hex.EncodeToString(key) //Encode the hash key as a string
 	lifeTime := time.Minute //Set lifetime/duration of the data store
-	kademlia.network.store.StoreData(key,data,time.Now().Add(lifeTime),false) //Store data for ourselves as well
+	kademlia.network.store.StoreData(key,data,lifeTime,time.Now().Add(time.Minute*2),false) //Store data for ourselves as well
 	storeKadId := NewKademliaID(keyEncoded) //Make kademlia id out of the key
 	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
 	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data
