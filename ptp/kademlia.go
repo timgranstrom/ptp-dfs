@@ -183,7 +183,7 @@ lookForRepliesChannel:
 	// TODO Return closest contacts
 }
 
-func (kademlia *Kademlia) LookupData(targetHash string) {
+func (kademlia *Kademlia) LookupData(targetHash string) bool {
 	targetId := NewKademliaID(targetHash)
 	workRecievedCount, expectedWorkCount := 0, 0 //Keep track of how many requests and replies have been sent
 	worker := kademlia.NewWorker() //Identity of the process running
@@ -200,12 +200,12 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 		}
 	}(contactCandidates.contacts, &workRecievedCount)
 	
-	timer := time.NewTimer(time.Second * 10) //Timer for timeout, can be reset when replies are received
-	LookupDataLoop:
+	timer := time.NewTimer(time.Second * 3) //Timer for timeout, can be reset when replies are received
+	
 	for {
 		select {
 			case reply := <- worker.workRequest: //Idle wait for replies to requests
-				timer.Reset(time.Second * 10) //Reset because there is further hope
+				timer.Reset(time.Second * 3) //Reset because there is further hope
 				workRecievedCount++
 				
 				//See if the reply contains the address to the where the data is located
@@ -224,7 +224,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 					}
 
 					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " found the data")
-					break LookupDataLoop //Process finished with what it intended to do
+					return true //Process finished with what it intended to do, return true to signify that
 					
 				//Otherwise, see what can be done with the replies' closest contacts instead
 				} else {
@@ -249,7 +249,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 					//See if it was the last reply, in that case the process failed to find the data
 					} else if expectedWorkCount == workRecievedCount {
 						log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " couldn't find the data it was looking for")
-						break LookupDataLoop //Process didn't find the data it was looking for
+						return false //Process failed to find the data
 					}
 					
 					//There's more replies for requests out there to handle, better get back to work
@@ -259,7 +259,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) {
 			//Idle wait for a timeout, timeout resets when a reply arrives
 			case <- timer.C:
 				log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " timed out from lack of replies")
-				break LookupDataLoop //Process timed out from lack of replies
+				return false //Process failed to find the data due to a timeout
 		}
 	}
 }
