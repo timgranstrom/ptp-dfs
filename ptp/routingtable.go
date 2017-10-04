@@ -30,7 +30,7 @@ func (routingTable *RoutingTable) AddContact(contact Contact) *Contact {
 	//log.Println(routingTable.me.Address+": UPDATING routingtable with ",contact.Address)
 	bucketIndex := routingTable.getBucketIndex(contact.ID) //Get bucket index for contact in routingTable.
 	bucket := routingTable.buckets[bucketIndex] //Get the bucket.
-	return bucket.AddContact(contact) //Add the contact to the bucket.
+	return bucket.AddContact(contact) //Add the contact to the bucket, return nil or contact to ping
 }
 /**
 * Find closest contacts from kademliaID (target) in routingTable

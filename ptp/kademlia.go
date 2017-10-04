@@ -43,6 +43,8 @@ func (kademlia *Kademlia) Run(){
 	dispatcher.StartDispatcher() //always run
 
 	go kademlia.BoostrapProcess()
+
+	//See if the routingtable wants to ping a contact
 	go func() {
 		for {
 			select {

@@ -37,7 +37,7 @@ func (bucket *bucket) AddContact(contact Contact) *Contact {
 		if bucket.list.Len() < bucketSize {
 			bucket.list.PushFront(contact)
 		} else {
-			return bucket.list.Back().Value.(*Contact)
+			return bucket.list.Back().Value.(*Contact) //Return a contact to ping
 		}
 	} else {
 		bucket.list.MoveToFront(element) //If contact already exist in bucket, only move it to the front.

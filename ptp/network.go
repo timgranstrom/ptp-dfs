@@ -31,6 +31,7 @@ type Sender struct {
 	data []byte
 }
 
+//Contact to ping and channel to send the response through
 type Ping struct {
 	reply chan bool
 	target *Contact
@@ -137,12 +138,15 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 	//When handling work, make sure to always add the message sender as a contact
 	kadId := NewKademliaID(work.message.SenderKademliaId)
 	requestContact := NewContact(kadId,work.senderAddress)
+
+	//Add the contact and see if there is a contact to ping
 	pingContact := network.routingTable.AddContact(requestContact)
 	if pingContact != nil {
 		ping := Ping{ make(chan bool), pingContact }
-		network.PingQueue <- ping
+		network.PingQueue <- ping //Tell self to start a worker that pings this node
 		select {
-			case reply := <- ping.reply:
+			case reply := <- ping.reply: //Wait for response
+				//If there is no reply (timeout), replace the pinged contact and move it to the front (using the addcontact func)
 				if !reply {
 					pingContact = &requestContact
 					network.routingTable.AddContact(requestContact)
@@ -161,9 +165,12 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 }
 
 func (network *Network) SendPingMessage(targetAddress string, requestId int64, isReply bool) {
+	//Create the ping message and marshal it
 	pingContactMessage := network.protobufhandler.CreatePingMessage()
 	wrapperMessage := network.protobufhandler.CreateWrapperMessage_1(network.routingTable.me.ID, requestId, protoMessages.MessageType_PING, pingContactMessage, isReply)
 	data := network.protobufhandler.MarshalMessage(wrapperMessage)
+
+	//Send the message using the queue
 	sender := *NewSender(targetAddress, &data)
 	network.SendQueue <- sender
 }
@@ -258,7 +265,7 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 }
 
 func (network *Network) ReceivePingContactMessage(request *WorkRequest) {
-	network.SendPingMessage(request.senderAddress, request.id, true)
+	network.SendPingMessage(request.senderAddress, request.id, true) //Just need to ping right back
 }
 
 func (network *Network) ReceiveFindDataMessage(request *WorkRequest) {
