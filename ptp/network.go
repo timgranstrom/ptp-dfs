@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 	"encoding/hex"
+	"math/rand"
 )
 
 // A buffered channel that we can send work requests on.
@@ -171,7 +172,7 @@ func (network *Network) SendPingMessage(targetAddress string, requestId int64, i
 
 	//Send the message using the queue
 	sender := *NewSender(targetAddress, &data)
-	network.SendQueue <- sender
+	network.SendMessage(&sender)
 }
 
 func (network *Network) SendFindContactMessage(targetContact *Contact, sendToContact *Contact, requestId int64, responseContacts []Contact,isReply bool) {
@@ -196,8 +197,7 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 	//log.Println(network.routingTable.me.Address+" :MARSHALED TARGET KAD ID: "+unmarshaledMsg.GetMsg_2().KademliaTargetId)
 
 	sender := *NewSender(sendToContact.Address,&data) //Create sender to put on sender queue
-	network.SendQueue <- sender                       //put sender on sender queue
-
+	network.SendMessage(&sender) //put sender on sender queue
 }
 
 func (network *Network) SendFindDataMessage(targetId *KademliaID, sendToContact Contact, requestID int64, isReply bool, foundFile bool, data []byte, responseContacts []Contact) {
@@ -208,7 +208,7 @@ func (network *Network) SendFindDataMessage(targetId *KademliaID, sendToContact 
 
 	//Send the message with the queue
 	sender := *NewSender(sendToContact.Address, &marshaledMsg)
-	network.SendQueue <- sender
+	network.SendMessage(&sender)
 }
 
 func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, lifeTime time.Duration, requestId int64, isReply bool) {
@@ -219,7 +219,7 @@ func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, dat
 	marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg) //Marshal the message for network transport
 
 	sender := *NewSender(sendToContact.Address,&marshaledMsg) //Create sender to put on sender queue
-	network.SendQueue <- sender                       //put sender on sender queue
+	network.SendMessage(&sender) //put sender on sender queue
 }
 
 //RENAME "PROTOCONTACT" TO PROTOCONTACT INSTEAD OF CONTACT
@@ -292,4 +292,14 @@ func (network *Network) RecieveStoreMessage(workRequest *WorkRequest) {
 	}
 	republishTime := time.Now().Add(time.Minute) //TODO set to be 24 hours after testing
 	network.store.StoreData([]byte(key),[]byte(data),lifeTime,republishTime,false)
+}
+
+func (network *Network) SendMessage(sender *Sender){
+	randomSource := rand.NewSource(time.Now().UnixNano()) //Random seed to randomize result
+	random := rand.New(randomSource) //Create a random
+
+	randomTimeVal := random.Intn(100)
+	time.Sleep(time.Duration(randomTimeVal)*1000000) //Sleep for a random max of 100 miliseconds
+	fmt.Println("SENT TO QUEUE AFTER",randomTimeVal,"ms.")
+	network.SendQueue <- *sender
 }
