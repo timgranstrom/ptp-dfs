@@ -208,6 +208,12 @@ func (ds *DaemonService) Cat(key string) string{
 
 	if isfound{
 		return string(data)
+	}else{
+		dataFoundWithLookup := ds.kademliaNode.LookupData(key)
+		if dataFoundWithLookup{
+			data,_ := ds.kademliaNode.network.store.RetrieveData(decodedKey)
+			return string(data)
+		}
 	}
 	return "Could not find data with key"
 }
