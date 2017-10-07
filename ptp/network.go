@@ -211,8 +211,8 @@ func (network *Network) SendFindDataMessage(targetId *KademliaID, sendToContact 
 	network.SendMessage(&sender)
 }
 
-func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, lifeTime time.Duration, requestId int64, isReply bool) {
-	storeMsg := network.protobufhandler.CreateStoreMessage(key,data,lifeTime) //Create a store message
+func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, data []byte, requestId int64, isReply bool) {
+	storeMsg := network.protobufhandler.CreateStoreMessage(key,data) //Create a store message
 	//Create wrapper message for the store message
 	wrapperMsg := network.protobufhandler.CreateWrapperMessage_4(network.routingTable.me.ID,requestId,protoMessages.MessageType_SEND_STORE,storeMsg,isReply)
 
