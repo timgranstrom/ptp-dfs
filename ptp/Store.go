@@ -183,7 +183,7 @@ func (store *Store) StoreData(key []byte, data []byte, isOriginal bool) error{
 	storeObject,alreadyExist := store.storeObjects[string(key)]
 
 	if !alreadyExist{
-		fmt.Println("STORED NEW OBJECT")
+		//fmt.Println("STORED NEW OBJECT")
 		storeObject = *NewStoreObject(data,isOriginal) //If it doesn't already exist, just make it
 	} else{ //If it already exist, reset it depending if it is has the original data or not
 		storeObject.ResetRepublishTime()

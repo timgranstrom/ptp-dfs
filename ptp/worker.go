@@ -15,8 +15,7 @@ type WorkRequest struct{
 type Worker struct {
 	workRequest chan WorkRequest //Functions own channels to receive messages in (this is work)
 	id int64 //Functions own id to attach in requests so replies can come back to the function through the dispatcher
-	//WorkerQueue chan chan WorkRequest //Queue with workers
-	timeoutDelay time.Duration //Time before the work times out
+	active bool
 }
 
 //Create a new worker and give it the Worker queue from the dispatcher
@@ -25,10 +24,14 @@ func (kademlia *Kademlia) NewWorker() Worker{
 	worker := Worker {
 		workRequest: make(chan WorkRequest),
 		id: id,
-		timeoutDelay: 10, //10 seconds before timeout on the entire function (stops listening for answer)
+		active: true,
 	}
 	kademlia.idCount++
 	return worker
+}
+
+func (worker *Worker) SetInactive() {
+	worker.active = false
 }
 
 // This function "starts" the worker by starting a goroutine, that is

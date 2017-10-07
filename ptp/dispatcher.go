@@ -14,68 +14,51 @@ func NewDispatcher(network *Network) *Dispatcher{
 	return dispatch
 }
 
-
-
 func (dispatcher *Dispatcher) StartDispatcher() {
-	// First, initialize the channel we are going to but the workers' work channels into.
-	//WorkerQueue = make(chan Worker, nworkers)
+	log.Println(dispatcher.network.routingTable.me.Address + ": Dispatcher active")
 
-	// Now, create all of our workers. NOT NECESSARY
-	/*for i := 0; i<nworkers; i++ {
-		fmt.Println("Starting worker", i+1)
-		worker := NewWorker(i+1, WorkerQueue)
-		worker.Start()
-	}*/
-
-	go func() { //New GoRoutine
+	go func() {
 		for {
 			select {
-			case workReceived := <-dispatcher.network.WorkQueue:
-
-				//log.Println(dispatcher.network.routingTable.me.Address,":///////////////////////////////////////// Received work request with ID",workReceived.id, "is reply:",workReceived.message.IsReply)
-				//log.Println(dispatcher.network.routingTable.me.Address,": TYPE: ",work.message.MessageType.String())
-
-				go func(work WorkRequest) { //New GoRoutine
-					if work.message.IsReply {
-
-						for { //Always try to find the correct worker until Timeout or success
-
-							worker := <-dispatcher.network.WorkerQueue
-							//log.Println(dispatcher.network.routingTable.me.Address,": POPPED WORKER")
-							//	log.Println(dispatcher.network.routingTable.me.Address,": WORKER RECIEVED WITH ID",worker.id)
-
-							if worker.id == work.id { //If worker and work id match, SUCCESS!
-								//	log.Println(dispatcher.network.routingTable.me.Address,": Dispatching work request for worker ID ",work.id)
-								worker.workRequest <- work //Dispatch to the correct worker instead (not correct now)
+				//Wait for messages that are either replies or requests
+				case workReceived := <-dispatcher.network.WorkQueue:
+					go func(work WorkRequest) {
+						//If it's a reply, send it to a worker, otherwise it's a request
+						if work.message.IsReply {
+							for { //Always try to find the correct worker until Timeout or success
+								worker := <-dispatcher.network.WorkerQueue
+								//See if the worker is active, otherwise close it and don't put it back
+								if worker.active {
+									//See if it is the right worker to send the work to, otherwise put it pack
+									if worker.id == work.id {
+										worker.workRequest <- work //Dispatch to the correct worker
+										break
+									} else {
+										dispatcher.network.WorkerQueue <- worker //Put the worker back
+									}
+								} else {
+									close(worker.workRequest)
+								}
+							}
+						} else {
+							switch work.message.MessageType {
+							case protoMessages.MessageType_PING:
+								dispatcher.network.ReceivePingContactMessage(&work)
 								break
-							} else {
-								//	log.Println(dispatcher.network.routingTable.me.Address,": WRONG WORKER")
-								dispatcher.network.WorkerQueue <- worker //Add worker back to queue if it was the wrong worker
+							case protoMessages.MessageType_FIND_CONTACT:
+								dispatcher.network.RecieveFindContactMessage(&work)
+								break
+							case protoMessages.MessageType_FIND_DATA:
+								dispatcher.network.ReceiveFindDataMessage(&work)
+								break
+							case protoMessages.MessageType_SEND_STORE:
+								dispatcher.network.RecieveStoreMessage(&work)
+								break
+							default:
+								break
 							}
 						}
-					} else {
-						switch work.message.MessageType {
-						case protoMessages.MessageType_PING:
-							log.Println(dispatcher.network.routingTable.me.Address, " :Picked up PING from Message Queue")
-							dispatcher.network.ReceivePingContactMessage(&work)
-							break
-						case protoMessages.MessageType_FIND_CONTACT:
-							//log.Println(dispatcher.network.routingTable.me.Address," :Picked up [FIND CONTACT REQUEST] from Message Queue")
-							dispatcher.network.RecieveFindContactMessage(&work)
-							break
-						case protoMessages.MessageType_FIND_DATA:
-							log.Println(dispatcher.network.routingTable.me.Address, " :Picked up FIND DATA from Message Queue")
-							dispatcher.network.ReceiveFindDataMessage(&work)
-							break
-						case protoMessages.MessageType_SEND_STORE:
-							log.Println(dispatcher.network.routingTable.me.Address," :Picked up SEND STORE from Message Queue")
-							dispatcher.network.RecieveStoreMessage(&work)
-							break
-						default:
-							log.Println(dispatcher.network.routingTable.me.Address, " :Picked up UNKNOWN MESSAGE TYPE from Message Queue")
-						}
-					}
-				}(workReceived)
+					}(workReceived)
 			}
 		}
 	}()

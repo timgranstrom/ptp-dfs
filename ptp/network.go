@@ -5,7 +5,6 @@ import (
 	"os"
 	"net"
 	"log"
-	"strconv"
 	"time"
 	"encoding/hex"
 	"math/rand"
@@ -67,7 +66,7 @@ func CheckError(err error) {
 
 
 func (network *Network) Sender() {
-	log.Println(network.routingTable.me.Address,": SENDER STARTED")
+	log.Println(network.routingTable.me.Address + ": Sender active")
 
 	for{
 		select {
@@ -101,14 +100,15 @@ func (network *Network)SetupUDPListener(address string) *net.UDPConn{
 	//ServerConn.SetReadBuffer(4096)
 	//ServerConn.SetWriteBuffer(1048576)
 	//ServerConn.SetReadBuffer(1048576)
-	log.Println(address+": Connection Established at "+ServerAddr.IP.String()+":"+strconv.Itoa(ServerAddr.Port))
+	//log.Println(address+": Connection Established at "+ServerAddr.IP.String()+":"+strconv.Itoa(ServerAddr.Port))
 	CheckError(err)
 	network.listenerActive = true
 	return ServerConn
 }
 
 func (network *Network) Listen() {
-	log.Println(network.routingTable.me.Address,": LISTENER")
+	log.Println(network.routingTable.me.Address + ": Listener active")
+	//log.Println(network.routingTable.me.Address,": LISTENER")
 	ServerConn := network.SetupUDPListener(network.routingTable.me.Address)
 	defer ServerConn.Close()
 
@@ -215,44 +215,14 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 	if len(workRequest.message.GetMsg_2().KademliaTargetId) == 0{
 		fmt.Println(network.routingTable.me.Address,": THIS SHIT IS EMPTY")
 	}
-	//fmt.Println(network.routingTable.me.Address,": RECEIVED [FIND CONTACT] MESSAGE WITH TARGET",workRequest.message.GetMsg_2().KademliaTargetId)
 
-	//log.Println(network.routingTable.me.Address,": Recieved [Find Contact Request] from ",workRequest.senderAddress)
-	//log.Println(network.routingTable.me.Address,": TARGET KAD ID: ",*workRequest.message.GetMsg_2().KademliaTargetId)
+	log.Println(network.routingTable.me.Address + ": Received LOOKUP_CONTACT request from", fmt.Sprintf("%20s", workRequest.senderAddress), "for", workRequest.message.GetMsg_2().KademliaTargetId)
 
 	targetKadId := NewKademliaID(workRequest.message.GetMsg_2().KademliaTargetId)
 	targetContact := NewContact(targetKadId,"") //Ignore address, we only care about the target kademlia ID here
 	contacts := network.routingTable.FindClosestContacts(targetKadId,3)
 	sendContact := NewContact(nil,workRequest.senderAddress) //Ignore kad id, we only care about the address to send the response
-	//lookupContactMsg := network.protobufhandler.CreateLookupContactMessage(targetKadId)
-
-	/*log.Println(network.routingTable.me.Address,": Contacts to return:")
-	log.Println(network.routingTable.me.Address,": <LIST START>")
-
-	for _,elem := range contacts{
-		log.Println(network.routingTable.me.Address+":",elem.Address)
-		protoContact := network.protobufhandler.CreateContactMessage(elem.ID,elem.Address)
-		lookupContactMsg.Contacts = append(lookupContactMsg.Contacts, protoContact)
-	}
-	log.Println(network.routingTable.me.Address,": <LIST END>")*/
-
-
-	//wrapperMsg := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,workRequest.id,protoMessages.MessageType_FIND_CONTACT, lookupContactMsg,true)
-	//log.Println(network.routingTable.me.Address,": <LIST OF FOUND CONTACTS START>")
-	//for _,contact := range contacts{
-	//	log.Println(network.routingTable.me.Address,": -->",contact.Address)
-
-	//}
-	//log.Println(network.routingTable.me.Address,": </LIST OF FOUND CONTACTS END>")
-
 	network.SendFindContactMessage(&targetContact,&sendContact,workRequest.id,contacts,true)
-	//marshaledMsg := network.protobufhandler.MarshalMessage(wrapperMsg)
-	//unmarshaledMsg := network.protobufhandler.UnMarshalWrapperMessage(marshaledMsg)
-
-	//log.Println(network.routingTable.me.Address+" :(SEND FROM RECEIVED) MARSHALED TARGET KAD ID: "+sendContact.Address)
-	//sender := *NewSender(workRequest.senderAddress,&marshaledMsg) //Create sender to put on sender queue
-	//network.SendQueue <- sender //put sender on sender queue
-	//network.Send(workRequest.senderAddress,marshaledMsg)
 }
 
 func (network *Network) ReceivePingContactMessage(request *WorkRequest) {
@@ -260,6 +230,8 @@ func (network *Network) ReceivePingContactMessage(request *WorkRequest) {
 }
 
 func (network *Network) ReceiveFindDataMessage(request *WorkRequest) {
+	log.Println(network.routingTable.me.Address + ": Received LOOKUP_DATA request from", fmt.Sprintf("%20s", request.senderAddress), "for", request.message.GetMsg_3().KademliaTargetId)
+
 	contacts := []Contact{}
 	targetId := NewKademliaID(request.message.GetMsg_3().KademliaTargetId)
 	targetIdBytes,err := hex.DecodeString(request.message.GetMsg_3().KademliaTargetId)
@@ -275,7 +247,7 @@ func (network *Network) ReceiveFindDataMessage(request *WorkRequest) {
 Stores data with a specific key from the message in the key-value store.
  */
 func (network *Network) RecieveStoreMessage(workRequest *WorkRequest) {
-
+	log.Println(network.routingTable.me.Address + ": Received STORE_DATA request from", fmt.Sprintf("%20s", workRequest.senderAddress))
 	key := workRequest.message.GetMsg_4().KeyStore
 	data := workRequest.message.GetMsg_4().ValueStore
 	network.store.StoreData([]byte(key),[]byte(data),false) //Store data as a nonOriginal

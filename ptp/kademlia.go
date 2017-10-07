@@ -9,11 +9,11 @@ import (
 )
 
 type Kademlia struct {
-	routingTable RoutingTable
-	network *Network
-	workers *list.List //List of all current workers
-	idCount int64 //Global id counter for workers
-	boostrapNode *Contact //boostrap node to get you into the network
+	routingTable  RoutingTable
+	network       *Network
+	workers       *list.List //List of all current workers
+	idCount       int64      //Global id counter for workers
+	bootstrapNode *Contact   //boostrap node to get you into the network
 }
 
 //Create a new kademlia with random id and at a specific address
@@ -28,15 +28,17 @@ func NewKademlia (address string, bootstrapNode *Contact) *Kademlia{
 		idCount:0,
 	}
 	if bootstrapNode != nil {
-		log.Println(kademlia.routingTable.me.Address+": Add boostrap node as contact")
+		//log.Println(kademlia.routingTable.me.Address+": Add boostrap node as contact")
 		kademlia.routingTable.AddContact(*bootstrapNode) //Add boostrap node in network
 	}
 	return kademlia
 }
 
 func (kademlia *Kademlia) Run(){
-	println("\n---------------")
-	log.Println(kademlia.network.routingTable.me.Address,": NODE STARTED")
+	println()
+	log.Println(kademlia.GetMe().Address + ": Initializing node")
+	//println("\n---------------")
+	//log.Println(kademlia.network.routingTable.me.Address,": NODE STARTED")
 
 	go kademlia.network.Listen() //Start listener on network
 	go kademlia.network.Sender() //Start the sender on network
@@ -65,60 +67,68 @@ func (kademlia *Kademlia) BootstrapProcess(){
 			break
 		}
 	}
-	log.Println(kademlia.network.routingTable.me.Address,"###########Bootstrapping process###########")
+	log.Println(kademlia.network.routingTable.me.Address + ": Bootstrapping")
 	kademlia.LookupContact(&kademlia.routingTable.me) //Find closest nodes to me in network
-	log.Println(kademlia.network.routingTable.me.Address,"###########Finished Bootstrapping process###########")
+	log.Println(kademlia.network.routingTable.me.Address + ": Finished bootstrapping")
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) ContactCandidates {
-	workRecievedCount, expectedWorkCount := 0, 0
+	workReceivedCount, expectedWorkCount := 0, 0
 	worker := kademlia.NewWorker()
+	defer worker.SetInactive()
 	kademlia.network.WorkerQueue <- worker
 
-	contactCandidates := ContactCandidates{}                                          //closes contact candidates for the lookup
-	contactCandidates.Append(kademlia.routingTable.FindClosestContacts(target.ID, 3)) //Retrieve nodes own closest contacts
+	log.Println(kademlia.GetMe().Address + ": LOOKUP_CONTACT", worker.id, "started for", target.ID)
 
+	contactCandidates := ContactCandidates{kademlia.routingTable.FindClosestContacts(target.ID, 3)}
+
+	//Send requests in goroutine so process can instantly wait for replies
 	expectedWorkCount += len(contactCandidates.contacts)
 	go func(contacts []Contact) {
-		for _, contact := range contactCandidates.contacts {
+		for _, contact := range contacts {
 			kademlia.network.SendFindContactMessage(target, &contact, worker.id, []Contact{}, false)
+			log.Println(kademlia.GetMe().Address + ":  Sending LOOKUP_CONTACT request to  ", fmt.Sprintf("%20s", contact.Address), "for", target.ID)
 		}
 	}(contactCandidates.contacts)
 
 	timeoutTimer := time.NewTimer(time.Second * 3)
 
+	//Start waiting for replies or timeout
 	LookupContactLoop:
 	for {
 		select {
-		case reply := <-worker.workRequest: //Idle wait for replies to requests
-			//Reset timeout timer and increment the amount of replies received
-			timeoutTimer.Reset(time.Second * 3)
-			workRecievedCount++
+			case reply := <-worker.workRequest: //Idle wait for replies to requests
+				//Reset timeout timer and increment the amount of replies received
+				timeoutTimer.Reset(time.Second * 3)
+				workReceivedCount++
 
-			//Convert protobuf contacts in reply to kademlia contacts
-			replyContacts := ConvertProtobufContacts(reply.message.GetMsg_2().Contacts, kademlia.GetMe())
+				//Convert protobuf contacts in reply to kademlia contacts
+				replyContacts := ConvertProtobufContacts(reply.message.GetMsg_2().Contacts, kademlia.GetMe())
 
-			//Add replied contacts to the contact candidate list, get the newly added ones
-			newContacts := contactCandidates.AppendNonDuplicates(replyContacts)
+				//Add replied contacts to the contact candidate list, get the newly added ones
+				newContacts := contactCandidates.AppendNonDuplicates(replyContacts)
 
-			//Send out requests to the newly added contacts
-			expectedWorkCount += len(newContacts)
-			go func(contacts []Contact) {
-				for _, contact := range contactCandidates.contacts {
-					kademlia.network.SendFindContactMessage(target, &contact, worker.id, []Contact{}, false)
+				//Send requests to new closest contacts in goroutine so process can instantly wait for replies
+				expectedWorkCount += len(newContacts)
+				go func(contacts []Contact) {
+					for _, contact := range contacts {
+						kademlia.network.SendFindContactMessage(target, &contact, worker.id, []Contact{}, false)
+						log.Println(kademlia.GetMe().Address + ":  Sending LOOKUP_CONTACT request to  ", fmt.Sprintf("%20s", contact.Address), "for", target.ID)
+					}
+				}(newContacts)
+
+				//If there's more work, go back to waiting, otherwise there's nothing more and closest contacts have been found
+				if workReceivedCount < expectedWorkCount {
+					kademlia.network.WorkerQueue <- worker
+				} else {
+					log.Println(kademlia.routingTable.me.Address + ": LOOKUP_CONTACT", worker.id, "found closest contacts, got all expected replies")
+					break LookupContactLoop
 				}
-			}(newContacts)
 
-			//If there's more work, go back to waiting, otherwise there's nothing more and closest contacts have been found
-			if workRecievedCount < expectedWorkCount {
-				kademlia.network.WorkerQueue <- worker
-			} else {
-				log.Println(kademlia.routingTable.me.Address, ": LOOKUP_CONTACT", worker.id, "found closest contacts, got all expected replies")
+			//Idle wait for a timeout, timeout resets when a reply arrives
+			case <-timeoutTimer.C:
+				log.Println(kademlia.routingTable.me.Address + ": LOOKUP_CONTACT", worker.id, "timed out, got", workReceivedCount, "out of", expectedWorkCount, "expected replies")
 				break LookupContactLoop
-			}
-		case <-timeoutTimer.C:
-			log.Println(kademlia.routingTable.me.Address, ": LOOKUP_CONTACT", worker.id, "timed out, got", workRecievedCount, "out of", expectedWorkCount, "expected replies")
-			break LookupContactLoop
 		}
 	}
 	return contactCandidates
@@ -128,27 +138,31 @@ func (kademlia *Kademlia) LookupData(targetHash string) (data []byte, isFound bo
 	targetId := NewKademliaID(targetHash)
 	workRecievedCount, expectedWorkCount := 0, 0 //Keep track of how many requests and replies have been sent
 	worker := kademlia.NewWorker() //Identity of the process running
+	defer worker.SetInactive()
 	kademlia.network.WorkerQueue <- worker //Put self on queue
-	defer close(worker.workRequest) //Make sure worker is taken out of worker queue when done
+
 	contactCandidates := ContactCandidates{kademlia.routingTable.FindClosestContacts(NewKademliaID(targetHash),3) } //Retrieve nodes own closest contacts
 	latestNonFileContact := &Contact{} //Contact to send store request to if data is found
 
-	log.Println(kademlia.routingTable.me.Address,": Started LOOKUP_DATA", worker.id, "for hash", targetHash)
+	log.Println(kademlia.routingTable.me.Address + ": LOOKUP_DATA", worker.id, "started for hash", targetHash)
 
+	//Send requests in goroutine so process can instantly wait for replies
 	expectedWorkCount += len(contactCandidates.contacts)
-	go func(contacts []Contact) { //Send requests concurrently
+	go func(contacts []Contact) {
 		for _, contact := range contacts {
+			log.Println(kademlia.GetMe().Address + ":  Sending LOOKUP_DATA request to  ", fmt.Sprintf("%20s", contact.Address), "for", targetId.String())
 			kademlia.network.SendFindDataMessage(targetId, contact, worker.id, false, false, nil, nil)
 		}
 	}(contactCandidates.contacts)
-	
-	timer := time.NewTimer(time.Second * 3) //Timer for timeout, can be reset when replies are received
+
+	//Timer for timeout, can be reset when replies are received
+	timeoutTimer := time.NewTimer(time.Second * 3)
 
 	//Start waiting for replies or timeout
 	for {
 		select {
 			case reply := <- worker.workRequest: //Idle wait for replies to requests
-				timer.Reset(time.Second * 3) //Reset because there is further hope
+				timeoutTimer.Reset(time.Second * 3)
 				workRecievedCount++
 				
 				//See if the reply contains the address to the where the data is located
@@ -163,9 +177,10 @@ func (kademlia *Kademlia) LookupData(targetHash string) (data []byte, isFound bo
 					//See if there is a contact to send a store request to
 					if latestNonFileContact != nil {
 						kademlia.network.SendStoreMessage(latestNonFileContact, key, data, worker.id, false)
+						log.Println(kademlia.GetMe().Address + ":  Sending STORE_DATA request to  ", fmt.Sprintf("%20s", latestNonFileContact.Address))
 					}
 
-					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " found the data")
+					log.Println(kademlia.routingTable.me.Address + ": LOOKUP_DATA", worker.id, "found the data")
 					return data, true //Process finished with what it intended to do, return true to signify that
 					
 				//Otherwise, see what can be done with the replies' closest contacts instead
@@ -180,27 +195,26 @@ func (kademlia *Kademlia) LookupData(targetHash string) (data []byte, isFound bo
 					newContactCandidates := contactCandidates.AppendNonDuplicates(replyContacts)
 					
 					//See if there are any new candidates to send more requests to
-					if len(newContactCandidates) > 0 {
-						expectedWorkCount += len(newContactCandidates)
-						go func(contacts []Contact) { //Send requests concurrently
-							for _, contact := range contacts {
-								kademlia.network.SendFindDataMessage(targetId, contact, worker.id, false, false, nil, nil)
-							}
-						}(newContactCandidates)
+					expectedWorkCount += len(newContactCandidates)
+					go func(contacts []Contact) { //Send requests concurrently
+						for _, contact := range contacts {
+							log.Println(kademlia.GetMe().Address + ":  Sending LOOKUP_DATA request to  ", fmt.Sprintf("%20s", contact.Address), "for", targetId.String())
+							kademlia.network.SendFindDataMessage(targetId, contact, worker.id, false, false, nil, nil)
+						}
+					}(newContactCandidates)
 
-					//See if it was the last reply, in that case the process failed to find the data
-					} else if expectedWorkCount == workRecievedCount {
-						log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " couldn't find the data it was looking for")
+					//If there's more work, go back to waiting, otherwise there's nothing more and the data couldn't be found
+					if workRecievedCount < expectedWorkCount {
+						kademlia.network.WorkerQueue <- worker
+					} else {
+						log.Println(kademlia.routingTable.me.Address + ": LOOKUP_DATA", worker.id, "couldn't find the data it was looking for")
 						return nil, false //Process failed to find the data
 					}
-					
-					//There's more replies for requests out there to handle, better get back to work
-					kademlia.network.WorkerQueue <- worker
 				}
 
 			//Idle wait for a timeout, timeout resets when a reply arrives
-			case <- timer.C:
-				log.Println(kademlia.routingTable.me.Address,": Lookup data process ", worker.id, " timed out from lack of replies, recieved ", workRecievedCount, " out of ", expectedWorkCount, " replies")
+			case <- timeoutTimer.C:
+				log.Println(kademlia.routingTable.me.Address + ": LOOKUP_DATA", worker.id, "timed out from lack of replies, recieved", workRecievedCount, "out of", expectedWorkCount, "replies")
 				return nil, false //Process failed to find the data due to a timeout
 		}
 	}
@@ -210,8 +224,10 @@ func (kademlia *Kademlia) LookupData(targetHash string) (data []byte, isFound bo
 Store function to store data from a filename
  */
 func (kademlia *Kademlia) Store(fileName string,data []byte) (keyEncoded string) {
+	log.Println(kademlia.GetMe().Address + ": STORE_DATA started for", fileName)
 	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
 	keyEncoded = kademlia.StoreInternal(key,data) //Run the internal store function
+	log.Println(kademlia.GetMe().Address + ": STORE_DATA finished for", fileName)
 	return keyEncoded
 }
 
@@ -225,6 +241,7 @@ func (kademlia *Kademlia) StoreInternal(key []byte,data []byte) (keyEncoded stri
 	worker := kademlia.NewWorker() //Just make a worker to get a unique message- and worker id.
 	for _,targetContact := range contactCandidates.contacts{
 		kademlia.network.SendStoreMessage(&targetContact,key,data,worker.id,false)
+		log.Println(kademlia.GetMe().Address + ":  Sending STORE_DATA request to  ", fmt.Sprintf("%20s", targetContact.Address))
 	}
 	return keyEncoded
 }
@@ -238,6 +255,7 @@ func (kademlia *Kademlia) GetMe() Contact{
 
 func (kademlia *Kademlia) PingContact(ping Ping) bool {
 	worker := kademlia.NewWorker()
+	defer worker.SetInactive()
 	kademlia.network.SendPingMessage(ping.target.Address, worker.id, false)
 	select {
 		case <- worker.workRequest:

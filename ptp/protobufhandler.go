@@ -224,11 +224,9 @@ func ConvertProtobufContacts(protoContacts []*protoMessages.ProtoContact, me Con
 	contacts := []Contact{}
 	for _,protoContact := range protoContacts {
 		protoKademliaID := NewKademliaID(protoContact.GetKademliaId())
-		if me.ID != protoKademliaID {
+		if !me.ID.Equals(protoKademliaID) {
 			replyContact := NewContact(protoKademliaID, protoContact.GetAddress())
 			contacts = append(contacts, replyContact)
-		} else {
-			log.Println(me.Address,": Filtered from sending LOOKUP_DATA message to self")
 		}
 	}
 	return contacts
