@@ -71,10 +71,10 @@ func (protobufHandler *ProtobufHandler) UnMarshalLookupContactMessage(message []
 /**
 Unmarshal a wrapper message and return the unmarshaled message
  */
-func (protobufHandler *ProtobufHandler) UnMarshalWrapperMessage(message []byte) *protoMessages.WrapperMessage {
+func (protobufHandler *ProtobufHandler) UnMarshalWrapperMessage(message []byte) protoMessages.WrapperMessage {
 	unwrappedMessage := &protoMessages.WrapperMessage{} //Create the variable to store the unwrapped result
 	proto.Unmarshal(message,unwrappedMessage)
-	return unwrappedMessage
+	return *unwrappedMessage
 }
 
 
@@ -94,8 +94,7 @@ func (protobufHandler *ProtobufHandler) CreateWrapperMessage_1(senderKademliaId 
 		RequestId:requestId,
 		IsReply:isReply,
 	}
-	wrappedMsg := protoMessages.WrapperMessage_Msg_1{message}
-	wrapperMessage.Messages = &wrappedMsg
+	wrapperMessage.Msg_1 = message
 
 	return wrapperMessage
 }
@@ -110,8 +109,8 @@ func (protobufHandler *ProtobufHandler) CreateWrapperMessage_2(senderKademliaId 
 		RequestId:requestId,
 		IsReply:isReply,
 	}
-	wrappedMsg := protoMessages.WrapperMessage_Msg_2{message}
-	wrapperMessage.Messages = &wrappedMsg
+	//wrappedMsg := protoMessages.LookupContactMessage{message}
+	wrapperMessage.Msg_2 = message
 
 	return wrapperMessage
 }
@@ -126,8 +125,8 @@ func (protobufHandler *ProtobufHandler) CreateWrapperMessage_3(senderKademliaId 
 		RequestId:requestId,
 		IsReply:isReply,
 	}
-	wrappedMsg := protoMessages.WrapperMessage_Msg_3{message}
-	wrapperMessage.Messages = &wrappedMsg
+	//wrappedMsg := protoMessages.WrapperMessage_Msg_3{message}
+	wrapperMessage.Msg_3 = message
 
 	return wrapperMessage
 }
@@ -142,8 +141,8 @@ func (protobufHandler *ProtobufHandler) CreateWrapperMessage_4(senderKademliaId 
 		RequestId:requestId,
 		IsReply:isReply,
 	}
-	wrappedMsg := protoMessages.WrapperMessage_Msg_4{message}
-	wrapperMessage.Messages = &wrappedMsg
+	//wrappedMsg := protoMessages.WrapperMessage_Msg_4{message}
+	wrapperMessage.Msg_4 = message
 
 	return wrapperMessage
 }

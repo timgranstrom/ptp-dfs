@@ -15,10 +15,10 @@ func CreateAndRunNodes(amount int) list.List {
 	for i := 0; i < amount; i++ {
 		nodeList.PushBack(Kademlia{})
 		if i == 0 {
-			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":%04d", i), nil)
+			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":9%03d", i), nil)
 		} else {
 			bootstrap := nodeList.Back().Prev().Value.(*Kademlia).routingTable.me
-			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":%04d", i), &bootstrap)
+			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":9%03d", i), &bootstrap)
 		}
 		node := nodeList.Back().Value.(*Kademlia)
 		go node.Run()

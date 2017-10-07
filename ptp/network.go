@@ -47,9 +47,9 @@ func NewSender(address string, data *[]byte) *Sender{
 
 func NewNetwork(routingTable RoutingTable) *Network{
 	network := &Network{routingTable:routingTable,
-			WorkerQueue: make(chan Worker,100),
-			WorkQueue:make(chan WorkRequest,100),
-			SendQueue:make(chan Sender,500),
+			WorkerQueue: make(chan Worker,1000),
+			WorkQueue:make(chan WorkRequest,1000),
+			SendQueue:make(chan Sender,1000),
 			PingQueue:make(chan Ping),
 			store: *MakeStore()}
 	return network
@@ -123,6 +123,10 @@ func (network *Network) Listen() {
 
 func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr,err error){
 	msg := network.protobufhandler.UnMarshalWrapperMessage(bufferMsg)
+	if msg.MessageType == protoMessages.MessageType_FIND_CONTACT{
+		log.Println(network.routingTable.me.Address," RECEIVED [FIND CONTACT]")
+
+	}
 	//log.Println(network.routingTable.me.Address+" :Received ",msg.MessageType.String(), " from ",addr)
 
 	/*if *msg.MessageType == protoMessages.MessageType_FIND_CONTACT{
@@ -133,7 +137,7 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 		fmt.Println("Error: ",err)
 	}
 	//take the message and make a WorkRequest out of them.
-	work := WorkRequest{msg.RequestId,*msg,addr.String()}
+	work := WorkRequest{msg.RequestId,msg,addr.String()}
 
 	//When handling work, make sure to always add the message sender as a contact
 	kadId := NewKademliaID(work.message.SenderKademliaId)
@@ -197,6 +201,8 @@ func (network *Network) SendFindContactMessage(targetContact *Contact, sendToCon
 	//log.Println(network.routingTable.me.Address+" :MARSHALED TARGET KAD ID: "+unmarshaledMsg.GetMsg_2().KademliaTargetId)
 
 	sender := *NewSender(sendToContact.Address,&data) //Create sender to put on sender queue
+	fmt.Println(network.routingTable.me.Address,": SENT [FIND CONTACT] MESSAGE WITH TARGET",wrapperMessage.GetMsg_2().KademliaTargetId)
+
 	network.SendMessage(&sender) //put sender on sender queue
 }
 
@@ -224,6 +230,10 @@ func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, dat
 
 //RENAME "PROTOCONTACT" TO PROTOCONTACT INSTEAD OF CONTACT
 func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
+	if len(workRequest.message.GetMsg_2().KademliaTargetId) == 0{
+		fmt.Println(network.routingTable.me.Address,": THIS SHIT IS EMPTY")
+	}
+	fmt.Println(network.routingTable.me.Address,": RECEIVED [FIND CONTACT] MESSAGE WITH TARGET",workRequest.message.GetMsg_2().KademliaTargetId)
 
 	//log.Println(network.routingTable.me.Address,": Recieved [Find Contact Request] from ",workRequest.senderAddress)
 	//log.Println(network.routingTable.me.Address,": TARGET KAD ID: ",*workRequest.message.GetMsg_2().KademliaTargetId)
