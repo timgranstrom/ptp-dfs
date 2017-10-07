@@ -81,7 +81,7 @@ func (network *Network) Sender() {
 				Conn, err := net.DialUDP("udp", LocalAddr,ServerAddr)
 				CheckError(err)
 			//	log.Println(network.routingTable.me.Address+" :Sent Message to ",sender.address)
-				log.Println(network.routingTable.me.Address,": SENT MESSAGE TO OF SIZE ",len(sender.data),"FROM ",LocalAddr.String(),"TO",ServerAddr.String())
+				//log.Println(network.routingTable.me.Address,": SENT MESSAGE TO OF SIZE ",len(sender.data),"FROM ",LocalAddr.String(),"TO",ServerAddr.String())
 				_,err = Conn.Write(sender.data)
 				CheckError(err)
 
@@ -115,18 +115,18 @@ func (network *Network) Listen() {
 	buffer := make([]byte, 1024)
 
 	for { //Infinite for-loop to check for incomming messages
-		i,addr,err := ServerConn.ReadFromUDP(buffer)
-		log.Println(network.routingTable.me.Address, ": RECEIVED MESSAGE OF SIZE", i, " FROM ", addr)
+		_,addr,err := ServerConn.ReadFromUDP(buffer)
+		//log.Println(network.routingTable.me.Address, ": RECEIVED MESSAGE OF SIZE", i, " FROM ", addr)
 		go network.HandleRecievedMessage(buffer, addr, err)
 	}
 }
 
 func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr,err error){
 	msg := network.protobufhandler.UnMarshalWrapperMessage(bufferMsg)
-	if msg.MessageType == protoMessages.MessageType_FIND_CONTACT{
-		log.Println(network.routingTable.me.Address," RECEIVED [FIND CONTACT]")
+	//if msg.MessageType == protoMessages.MessageType_FIND_CONTACT{
+	//	log.Println(network.routingTable.me.Address," RECEIVED [FIND CONTACT]")
 
-	}
+	//}
 	//log.Println(network.routingTable.me.Address+" :Received ",msg.MessageType.String(), " from ",addr)
 
 	/*if *msg.MessageType == protoMessages.MessageType_FIND_CONTACT{
@@ -180,29 +180,11 @@ func (network *Network) SendPingMessage(targetAddress string, requestId int64, i
 }
 
 func (network *Network) SendFindContactMessage(targetContact *Contact, sendToContact *Contact, requestId int64, responseContacts []Contact,isReply bool) {
-	// TODO
 	lookupContactMessage := network.protobufhandler.CreateLookupContactMessage(targetContact.ID) //Create a lookupContact message for the target sendToContact
-	responseProtoContacts := network.protobufhandler.CreateContactMessages(responseContacts)
-	lookupContactMessage.Contacts = responseProtoContacts
-	//Create wrapper message for the request
+	lookupContactMessage.Contacts = network.protobufhandler.CreateContactMessages(responseContacts)
 	wrapperMessage := network.protobufhandler.CreateWrapperMessage_2(network.routingTable.me.ID,requestId,protoMessages.MessageType_FIND_CONTACT,lookupContactMessage,isReply)
-
-
-
-	/*log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-	log.Println(network.routingTable.me.Address+" : Sent Find Contact Message ("+targetContact.Address+")"+ "to "+ sendToContact.Address)
-	log.Println(network.routingTable.me.Address+"Contacts sent: ",len(wrapperMessage.GetMsg_2().Contacts))
-	log.Println(network.routingTable.me.Address+" : KAD ID: ("+*wrapperMessage.GetMsg_2().KademliaTargetId+")"+ "to "+ sendToContact.Address)
-	log.Println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")*/
-
-	data := network.protobufhandler.MarshalMessage(wrapperMessage) //Marshal the message for network transport
-	//unmarshaledMsg := network.protobufhandler.UnMarshalWrapperMessage(data)
-
-	//log.Println(network.routingTable.me.Address+" :MARSHALED TARGET KAD ID: "+unmarshaledMsg.GetMsg_2().KademliaTargetId)
-
+	data := network.protobufhandler.MarshalMessage(wrapperMessage)
 	sender := *NewSender(sendToContact.Address,&data) //Create sender to put on sender queue
-	fmt.Println(network.routingTable.me.Address,": SENT [FIND CONTACT] MESSAGE WITH TARGET",wrapperMessage.GetMsg_2().KademliaTargetId)
-
 	network.SendMessage(&sender) //put sender on sender queue
 }
 
@@ -233,7 +215,7 @@ func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
 	if len(workRequest.message.GetMsg_2().KademliaTargetId) == 0{
 		fmt.Println(network.routingTable.me.Address,": THIS SHIT IS EMPTY")
 	}
-	fmt.Println(network.routingTable.me.Address,": RECEIVED [FIND CONTACT] MESSAGE WITH TARGET",workRequest.message.GetMsg_2().KademliaTargetId)
+	//fmt.Println(network.routingTable.me.Address,": RECEIVED [FIND CONTACT] MESSAGE WITH TARGET",workRequest.message.GetMsg_2().KademliaTargetId)
 
 	//log.Println(network.routingTable.me.Address,": Recieved [Find Contact Request] from ",workRequest.senderAddress)
 	//log.Println(network.routingTable.me.Address,": TARGET KAD ID: ",*workRequest.message.GetMsg_2().KademliaTargetId)
@@ -305,6 +287,6 @@ func (network *Network) SendMessage(sender *Sender){
 
 	randomTimeVal := random.Intn(100)
 	time.Sleep(time.Duration(randomTimeVal)*1000000) //Sleep for a random max of 100 miliseconds
-	fmt.Println("SENT TO QUEUE AFTER",randomTimeVal,"ms.")
+	//fmt.Println("SENT TO QUEUE AFTER",randomTimeVal,"ms.")
 	network.SendQueue <- *sender
 }
