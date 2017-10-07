@@ -6,7 +6,25 @@ import (
 	"io/ioutil"
 	"log"
 	"encoding/hex"
+	"container/list"
+	"fmt"
+	"go/ast"
 )
+
+func CreateAndRunNodes(amount int) list.List {
+	nodeList := list.New()
+	for i := 0; i < amount; i++ {
+		nodeList.PushBack(Kademlia{})
+		if i == 0 {
+			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":%04d", i), nil)
+		} else {
+			bootstrap := nodeList.Back().Prev().Value.(Kademlia).routingTable.me
+			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":%04d", i), &bootstrap)
+		}
+		go nodeList.Back().Value.(Kademlia).Run()
+	}
+	return *nodeList
+}
 
 func TestRunKademliaInstances(t *testing.T){
 	//Create nodes
