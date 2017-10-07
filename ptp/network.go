@@ -99,8 +99,8 @@ func (network *Network)SetupUDPListener(address string) *net.UDPConn{
 	/* Now listen at selected port */
 	ServerConn, err := net.ListenUDP("udp", ServerAddr)
 	//ServerConn.SetReadBuffer(4096)
-	ServerConn.SetWriteBuffer(1048576)
-	ServerConn.SetReadBuffer(1048576)
+	//ServerConn.SetWriteBuffer(1048576)
+	//ServerConn.SetReadBuffer(1048576)
 	log.Println(address+": Connection Established at "+ServerAddr.IP.String()+":"+strconv.Itoa(ServerAddr.Port))
 	CheckError(err)
 	network.listenerActive = true
@@ -286,12 +286,7 @@ func (network *Network) RecieveStoreMessage(workRequest *WorkRequest) {
 
 	key := workRequest.message.GetMsg_4().KeyStore
 	data := workRequest.message.GetMsg_4().ValueStore
-	lifeTime,error := time.ParseDuration(workRequest.message.GetMsg_4().LifeTime)
-	if error != nil{
-		log.Fatal("COULDN'T PARSE LIFETIME!")
-	}
-	republishTime := time.Now().Add(time.Minute) //TODO set to be 24 hours after testing
-	network.store.StoreData([]byte(key),[]byte(data),lifeTime,republishTime,false)
+	network.store.StoreData([]byte(key),[]byte(data),false) //Store data as a nonOriginal
 }
 
 func (network *Network) SendMessage(sender *Sender){

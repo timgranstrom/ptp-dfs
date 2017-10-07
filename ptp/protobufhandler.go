@@ -201,7 +201,6 @@ func (protobufHandler *ProtobufHandler) CreateStoreMessage(key []byte, data []by
 	storeMessage := &protoMessages.StoreMessage{
 		KeyStore: string(key), //Set kademlia id as key
 		ValueStore: string(data), //Set ip address as stored value
-		LifeTime: lifeTime.String(),
 	}
 	return storeMessage
 }

@@ -17,7 +17,7 @@ const (
 	DefaultDaemonName   = "dfs"
 	DefaultDaemonDescription  = "This is a kademlia implementation of a distributed file system"
 	DefaultDaemonCommandPort  = ":7009"
-	DefaultKademliaPort  = ":8000"
+	DefaultKademliaPort  = ":8050"
 )
 
 // Service has embedded daemon

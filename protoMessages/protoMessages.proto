@@ -50,5 +50,6 @@ message LookupDataMessage {
 message StoreMessage {
 	string key_store = 1; //Key should be kademliaID
 	string value_store = 2; //Value should be IP Address of node holding
-	string life_time = 3; //Duration/amount of time that the data should stay be stored
+	//string life_time = 3; //Duration/amount of time that the data should stay be stored
+	//bool republish_request = 3;
 }

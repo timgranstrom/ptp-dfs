@@ -216,7 +216,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) bool {
 					data := []byte(reply.message.GetMsg_3().GetFileData())
 					key,err := hex.DecodeString(targetHash)
 					CheckError(err)
-					kademlia.network.store.StoreData(key, data, time.Minute, time.Now().Add(time.Second*30), false) //Store the data
+					kademlia.network.store.StoreData(key, data, false) //Store the data
 
 					//See if there is a contact to send a store request to
 					if latestNonFileContact != nil {
@@ -268,7 +268,7 @@ func (kademlia *Kademlia) Store(fileName string,data []byte) (keyEncoded string)
 	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
 	keyEncoded = hex.EncodeToString(key) //Encode the hash key as a string
 	lifeTime := time.Minute //Set lifetime/duration of the data store
-	kademlia.network.store.StoreData(key,data,lifeTime,time.Now().Add(time.Minute*2),false) //Store data for ourselves as well
+	kademlia.network.store.StoreData(key,data,true) //Store data for ourselves as well as the original
 	storeKadId := NewKademliaID(keyEncoded) //Make kademlia id out of the key
 	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
 	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data

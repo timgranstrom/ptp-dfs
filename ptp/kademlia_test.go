@@ -67,7 +67,7 @@ func TestStoreKademlia(t *testing.T) {
 	time.Sleep(time.Second)
 
 	ds := NewDaemonService()
-	fileName, path := ds.ParseFilePathCommand("main/file.txt")
+	fileName, path := ds.ParseFilePathCommand("../main/file.txt")
 	b, _ := ioutil.ReadFile(path) // Take out the content of the file in byte
 	hashKey := node1.Store(fileName,b)
 	time.Sleep(time.Second)
