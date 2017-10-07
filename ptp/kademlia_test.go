@@ -153,3 +153,20 @@ func TestLookupDataKademlia(t *testing.T)  {
 		t.Fail()
 	}
 }
+
+func TestPurgeDataKademlia(t *testing.T) {
+	//Create nodes
+	node1 := NewKademlia(":8001", nil) //Original node
+	node2 := NewKademlia(":8002", &node1.routingTable.me) //Original node
+	time.Sleep(time.Second)
+	go node1.Run()
+	time.Sleep(time.Second)
+	go node2.Run()
+	time.Sleep(time.Second)
+
+	ds := NewDaemonService()
+	fileName, path := ds.ParseFilePathCommand("../main/file.txt")
+	b, _ := ioutil.ReadFile(path) // Take out the content of the file in byte
+	node1.Store(fileName,b) //Try to store, check if they republish automatically (REMEMBER TO CHANGE REPUBLISH TIME FOR TESTING
+	time.Sleep(time.Second*60)
+}

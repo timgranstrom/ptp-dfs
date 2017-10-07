@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 	"encoding/hex"
+	"fmt"
 )
 
 type Kademlia struct {
@@ -44,6 +45,7 @@ func (kademlia *Kademlia) Run(){
 
 	go kademlia.BoostrapProcess()
 
+	go kademlia.StoreTimer()
 	//See if the routingtable wants to ping a contact
 	go func() {
 		for {
@@ -220,7 +222,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) bool {
 
 					//See if there is a contact to send a store request to
 					if latestNonFileContact != nil {
-						kademlia.network.SendStoreMessage(latestNonFileContact, key, data, time.Second*30, worker.id, false)
+						kademlia.network.SendStoreMessage(latestNonFileContact, key, data, worker.id, false)
 					}
 
 					log.Println(kademlia.routingTable.me.Address,": LOOKUP_DATA ", worker.id, " found the data")
@@ -264,17 +266,25 @@ func (kademlia *Kademlia) LookupData(targetHash string) bool {
 	}
 }
 
+/**
+Store function to store data from a filename
+ */
 func (kademlia *Kademlia) Store(fileName string,data []byte) (keyEncoded string) {
 	key := kademlia.network.store.GetKey(fileName) //Get the finalized hash result
+	keyEncoded = kademlia.StoreInternal(key,data) //Run the internal store function
+	return keyEncoded
+}
+
+func (kademlia *Kademlia) StoreInternal(key []byte,data []byte) (keyEncoded string) {
 	keyEncoded = hex.EncodeToString(key) //Encode the hash key as a string
-	lifeTime := time.Minute //Set lifetime/duration of the data store
+
 	kademlia.network.store.StoreData(key,data,true) //Store data for ourselves as well as the original
 	storeKadId := NewKademliaID(keyEncoded) //Make kademlia id out of the key
 	storeContact := NewContact(storeKadId,"") //Create contact out of kad id
 	contactCandidates := kademlia.LookupContact(&storeContact) //Get the closest contacts to the data
 	worker := kademlia.NewWorker() //Just make a worker to get a unique message- and worker id.
 	for _,targetContact := range contactCandidates.contacts{
-		kademlia.network.SendStoreMessage(&targetContact,key,data,lifeTime,worker.id,false)
+		kademlia.network.SendStoreMessage(&targetContact,key,data,worker.id,false)
 	}
 	return keyEncoded
 }
@@ -297,4 +307,37 @@ func (kademlia *Kademlia) PingContact(ping Ping) bool {
 			ping.reply <- false
 			return false
 	}
+}
+
+func (kademlia *Kademlia) StoreTimer(){
+
+	for{
+		var removeStoreKeys []string
+		republishStoreObjects := make(map[string]StoreObject)
+
+		kademlia.network.store.mutex.Lock()
+		for key,storeObject := range kademlia.network.store.storeObjects{
+			if time.Now().After(storeObject.expirationTime){
+				removeStoreKeys = append(removeStoreKeys, key) //Flag to remove data for this key
+			} else if time.Now().After(storeObject.republishTime){ //If object has not expired, check if it should republish
+			fmt.Println("TIME TO REPUBLISH")
+				republishStoreObjects[key] = storeObject //save objects to republish and re-store(internally)
+			}
+		}
+		kademlia.network.store.mutex.Unlock()
+
+		for _,key := range removeStoreKeys{
+			kademlia.network.store.Delete([]byte(key)) //delete stored data that has expired
+		}
+
+		for key,storeObject := range republishStoreObjects{
+			nonHexKey := hex.EncodeToString([]byte(key))
+			//fmt.Println("TRY TO TRIGGER REPUBLISH FOR ",nonHexKey)
+			fmt.Println("TRIGGER REPUBLISH FOR ",nonHexKey)
+
+			kademlia.StoreInternal([]byte(key),storeObject.data)
+		}
+		time.Sleep(time.Second)
+	}
+
 }

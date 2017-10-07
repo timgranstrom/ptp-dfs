@@ -4,14 +4,14 @@ import (
 	"time"
 	"sync"
 	"crypto/sha1"
+	"fmt"
 )
 
 const(
-	ExpirationTimeOriginal = time.Hour*24+time.Minute*6 //24 hours and 6 minutes (just a little while after republish)
-	ExpirationTimeReplicate = time.Hour+time.Minute*6 //1 hour and 6 minutes (just a little while after republish)
-	RepublishTimeOriginal = time.Hour*24 //24 hours
-	RepublishTimeReplicate = time.Hour*1 //1 hour
-
+	ExpirationTimeOriginal = time.Second*24+time.Second*6 //Should be 24 hours and 6 minutes (just a little while after republish) ||| is 30 seconds for testing purposes
+	ExpirationTimeReplicate = time.Second*10+time.Second*6 //Should be 1 hour and 6 minutes (just a little while after republish) ||| is 16 seconds for testing purposes
+	RepublishTimeOriginal = time.Second*24 //Should be 24 hours ||| is 24 seconds for testing purposes
+	RepublishTimeReplicate = time.Second*10 //Should be 1 hour ||| is 10 seconds for testing purposes
 )
 
 /*
@@ -80,16 +80,21 @@ func NewStoreObject(data[]byte,isOriginal bool) *StoreObject{
 
 func (storeObject *StoreObject) ResetExpirationTime(){
 	if storeObject.isOriginal{
+		fmt.Println("RESET Expiration Time for original")
+
 		storeObject.expirationTime = time.Now().Add(ExpirationTimeOriginal)
 	} else{
+		fmt.Println("RESET expiration Time for replicate")
 		storeObject.expirationTime = time.Now().Add(ExpirationTimeReplicate)
 	}
 }
 
 func (storeObject *StoreObject) ResetRepublishTime(){
 	if storeObject.isOriginal{
+		fmt.Println("RESET Republish Time for original")
 		storeObject.republishTime = time.Now().Add(RepublishTimeOriginal)
 	} else{
+		fmt.Println("RESET Republish Time for replicate")
 		storeObject.republishTime = time.Now().Add(RepublishTimeReplicate)
 	}
 }
@@ -178,6 +183,7 @@ func (store *Store) StoreData(key []byte, data []byte, isOriginal bool) error{
 	storeObject,alreadyExist := store.storeObjects[string(key)]
 
 	if !alreadyExist{
+		fmt.Println("STORED NEW OBJECT")
 		storeObject = *NewStoreObject(data,isOriginal) //If it doesn't already exist, just make it
 	} else{ //If it already exist, reset it depending if it is has the original data or not
 		storeObject.ResetRepublishTime()
@@ -202,6 +208,7 @@ func (store *Store) Delete(key []byte) error{
 	//Remove all data if the key is not pinned
 	if isFound && !storeObject.pinned{
 		delete(store.storeObjects,string(key)) //Delete store object for specific key
+		fmt.Println("DELETED AN OBJECT")
 	}
 	if !isFound{
 		return NewStoreError("Could not find store object")
