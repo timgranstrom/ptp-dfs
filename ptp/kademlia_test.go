@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"container/list"
 	"fmt"
-	"go/ast"
 )
 
 func CreateAndRunNodes(amount int) list.List {
@@ -18,10 +17,12 @@ func CreateAndRunNodes(amount int) list.List {
 		if i == 0 {
 			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":%04d", i), nil)
 		} else {
-			bootstrap := nodeList.Back().Prev().Value.(Kademlia).routingTable.me
+			bootstrap := nodeList.Back().Prev().Value.(*Kademlia).routingTable.me
 			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":%04d", i), &bootstrap)
 		}
-		go nodeList.Back().Value.(Kademlia).Run()
+		node := nodeList.Back().Value.(*Kademlia)
+		go node.Run()
+		time.Sleep(time.Second * 2)
 	}
 	return *nodeList
 }
@@ -120,36 +121,25 @@ func TestPingKademlia(t *testing.T) {
 
 func TestLookupDataKademlia(t *testing.T)  {
 	//Create nodes
-	node1 := NewKademlia(":8001", nil) //Original node
-	node2 := NewKademlia(":8002", &node1.routingTable.me) //Original node
-	node3 := NewKademlia(":8003", &node2.routingTable.me) //Original node
-	time.Sleep(time.Second)
-	go node1.Run()
-	time.Sleep(time.Second)
-	go node2.Run()
-	time.Sleep(time.Second)
-	
+	nodeList := CreateAndRunNodes(100)
+
+	//Retrieve data
 	ds := NewDaemonService()
 	fileName, path := ds.ParseFilePathCommand("../main/file.txt")
-	b, _ := ioutil.ReadFile(path) // Take out the content of the file in byte
-	hashKey := node1.Store(fileName,b)
-	time.Sleep(time.Second)
-	data,_ := hex.DecodeString(hashKey)
-	data,isFound := node2.network.store.RetrieveData(data)
-	if isFound{
-		log.Println("DATA CONTENT: \n",string(data))
-	} else{
-		log.Fatal("Did not find expected file")
-		t.FailNow()
-	}
-	time.Sleep(time.Second)
+	data, _ := ioutil.ReadFile(path) // Take out the content of the file in byte
 
-	go node3.Run()
-	time.Sleep(time.Second)
-	if node3.LookupData(hashKey) {
-		log.Println("DATA FOUND, TEST COMPLETE")
+	//Store data in the first made node
+	frontNode := nodeList.Front().Value.(*Kademlia)
+	hashKey := frontNode.Store(fileName, data)
+
+	//Look it up from the last made node
+	backNode := nodeList.Back().Value.(*Kademlia)
+	foundData, isFound := backNode.LookupData(hashKey)
+
+	//See if the last node could find the data the first node stored
+	if isFound {
+		println(string(foundData))
 	} else {
-		log.Println("DATA NOT FOUND, TEST FAILED")
 		t.Fail()
 	}
 }
