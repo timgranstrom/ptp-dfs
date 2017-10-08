@@ -22,7 +22,7 @@ func CreateAndRunNodes(amount int) list.List {
 		}
 		node := nodeList.Back().Value.(*Kademlia)
 		go node.Run()
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 3)
 	}
 	return *nodeList
 }
@@ -100,6 +100,8 @@ func TestLookupDataKademlia(t *testing.T)  {
 	} else {
 		t.Fail()
 	}
+
+	time.Sleep(time.Second * 30)
 }
 
 func TestPurgeDataKademlia(t *testing.T) {

@@ -50,7 +50,7 @@ type ContactCandidates struct {
 * Append 2 lists together, sort them, keep only the "maxSize" closest contacts
   return the new contacts that "made the cut" and didn't already exist
  */
-func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, targetId KademliaID, maxSize int, me Contact) []Contact {
+func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, targetId KademliaID, me Contact) []Contact {
 	//Keep track of added contacts
 	addedCandidates := []Contact{}
 
@@ -62,35 +62,23 @@ func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, t
 	newCandidates.Sort()
 
 	//Go through the new candidates
+	count := 0
 	NewCandidates:
-	for i,_ := range newCandidates.contacts {
+	for _,newCandidate := range newCandidates.contacts {
 
 		//See if it's a duplicate or own id, skip it if it is
-		for j,_ := range candidates.contacts {
-			if newCandidates.contacts[i].ID.Equals(candidates.contacts[j].ID) ||
-				newCandidates.contacts[i].ID.Equals(me.ID) {
+		for _,candidate := range candidates.contacts {
+			if newCandidate.ID.Equals(candidate.ID) || newCandidate.ID.Equals(me.ID) {
 				continue NewCandidates
 			}
 		}
 
-		//Just fill up candidates if there's too few
-		if len(candidates.contacts) < maxSize {
-			candidates.Append( []Contact{ newCandidates.contacts[i] })
-			addedCandidates = append(addedCandidates, newCandidates.contacts[i])
-			candidates.Sort()
+		candidates.Append([]Contact{ newCandidate })
+		addedCandidates = append(addedCandidates, newCandidate)
+		count++
 
-		//See if the closest new candidate is closer than the least closest candidate
-		} else if newCandidates.contacts[i].ID.Less(candidates.contacts[len(candidates.contacts) - 1].ID) {
-
-			//Add the closer new candidate and keep track of it
-			candidates.Append( []Contact{ newCandidates.contacts[i] })
-			addedCandidates = append(addedCandidates, newCandidates.contacts[i])
-
-			//Sort, and then cut off the least closest if candidates are more than the allowed maxSize
-			candidates.Sort()
-			if len(candidates.contacts) > maxSize {
-				candidates.contacts = candidates.contacts[:maxSize]
-			}
+		if count > 3 {
+			break
 		}
 	}
 
