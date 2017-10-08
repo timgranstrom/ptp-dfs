@@ -152,20 +152,15 @@ func (network *Network) HandleRecievedMessage(bufferMsg []byte,addr *net.UDPAddr
 			case reply := <- ping.reply: //Wait for response
 				//If there is no reply (timeout), replace the pinged contact and move it to the front (using the addcontact func)
 				if !reply {
-					pingContact = &requestContact
+					*pingContact = requestContact
 					network.routingTable.AddContact(requestContact)
 				}
 		}
 	}
 	//log.Println(network.routingTable.me.Address+" :Received message from ",addr,": ADDED AS CONTACT")
 
-
 	//Push the work onto the queue.
 	network.WorkQueue <- work
-
-
-
-	//log.Println(network.routingTable.me.Address+": Work request queued")
 }
 
 func (network *Network) SendPingMessage(targetAddress string, requestId int64, isReply bool) {
@@ -212,17 +207,27 @@ func (network *Network) SendStoreMessage(sendToContact *Contact, key []byte, dat
 
 //RENAME "PROTOCONTACT" TO PROTOCONTACT INSTEAD OF CONTACT
 func (network *Network) RecieveFindContactMessage(workRequest *WorkRequest) {
-	if len(workRequest.message.GetMsg_2().KademliaTargetId) == 0{
-		fmt.Println(network.routingTable.me.Address,": THIS SHIT IS EMPTY")
-	}
-
 	log.Println(network.routingTable.me.Address + ": Received LOOKUP_CONTACT request from", fmt.Sprintf("%20s", workRequest.senderAddress), "for", workRequest.message.GetMsg_2().KademliaTargetId)
 
 	targetKadId := NewKademliaID(workRequest.message.GetMsg_2().KademliaTargetId)
 	targetContact := NewContact(targetKadId,"") //Ignore address, we only care about the target kademlia ID here
-	contacts := network.routingTable.FindClosestContacts(targetKadId,3)
+
+	contactCandidates := ContactCandidates{ network.routingTable.FindClosestContacts(targetKadId, 4) }
+
+	for _,contact := range contactCandidates.contacts {
+		if contact.Address == workRequest.senderAddress {
+			contactCandidates.Remove(contact)
+			break
+		}
+	}
+
+	if len(contactCandidates.contacts) > 3 {
+		contactCandidates.Sort()
+		contactCandidates.contacts = contactCandidates.contacts[:3]
+	}
+
 	sendContact := NewContact(nil,workRequest.senderAddress) //Ignore kad id, we only care about the address to send the response
-	network.SendFindContactMessage(&targetContact,&sendContact,workRequest.id,contacts,true)
+	network.SendFindContactMessage(&targetContact,&sendContact,workRequest.id,contactCandidates.contacts,true)
 }
 
 func (network *Network) ReceivePingContactMessage(request *WorkRequest) {

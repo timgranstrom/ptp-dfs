@@ -87,6 +87,9 @@ func TestLookupDataKademlia(t *testing.T)  {
 	//Store data in the first made node
 	frontNode := nodeList.Front().Value.(*Kademlia)
 	hashKey := frontNode.Store(fileName, data)
+	time.Sleep(time.Second)
+	println()
+
 	//Look it up from the last made node
 	backNode := nodeList.Back().Value.(*Kademlia)
 	foundData, isFound := backNode.LookupData(hashKey)

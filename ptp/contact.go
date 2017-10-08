@@ -50,7 +50,7 @@ type ContactCandidates struct {
 * Append 2 lists together, sort them, keep only the "maxSize" closest contacts
   return the new contacts that "made the cut" and didn't already exist
  */
-func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, targetId KademliaID, maxSize int) []Contact {
+func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, targetId KademliaID, maxSize int, me Contact) []Contact {
 	//Keep track of added contacts
 	addedCandidates := []Contact{}
 
@@ -65,15 +65,22 @@ func (candidates *ContactCandidates) AppendClosestContacts(contacts []Contact, t
 	NewCandidates:
 	for i,_ := range newCandidates.contacts {
 
-		//See if it's a duplicate, skip it if it's a duplicate
+		//See if it's a duplicate or own id, skip it if it is
 		for j,_ := range candidates.contacts {
-			if newCandidates.contacts[i].ID.Equals(candidates.contacts[j].ID) {
+			if newCandidates.contacts[i].ID.Equals(candidates.contacts[j].ID) ||
+				newCandidates.contacts[i].ID.Equals(me.ID) {
 				continue NewCandidates
 			}
 		}
 
+		//Just fill up candidates if there's too few
+		if len(candidates.contacts) < maxSize {
+			candidates.Append( []Contact{ newCandidates.contacts[i] })
+			addedCandidates = append(addedCandidates, newCandidates.contacts[i])
+			candidates.Sort()
+
 		//See if the closest new candidate is closer than the least closest candidate
-		if newCandidates.contacts[i].ID.Less(candidates.contacts[len(candidates.contacts) - 1].ID) {
+		} else if newCandidates.contacts[i].ID.Less(candidates.contacts[len(candidates.contacts) - 1].ID) {
 
 			//Add the closer new candidate and keep track of it
 			candidates.Append( []Contact{ newCandidates.contacts[i] })
@@ -159,4 +166,14 @@ func (candidates *ContactCandidates) Swap(i, j int) {
  */
 func (candidates *ContactCandidates) Less(i, j int) bool {
 	return candidates.contacts[i].Less(&candidates.contacts[j])
+}
+
+func (candidates *ContactCandidates) Remove(contact Contact) {
+	filteredCandidates := ContactCandidates{ []Contact{} }
+	for _,contactCandidate := range candidates.contacts {
+		if !contactCandidate.ID.Equals(contact.ID) {
+			filteredCandidates.Append([]Contact{ contactCandidate })
+		}
+	}
+	*candidates = filteredCandidates
 }

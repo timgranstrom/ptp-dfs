@@ -220,14 +220,10 @@ func (protobufHandler *ProtobufHandler) CreateLookupDataMessage(kademliaId *Kade
 	return lookupDataMessage
 }
 
-func ConvertProtobufContacts(protoContacts []*protoMessages.ProtoContact, me Contact) []Contact {
+func ConvertProtobufContacts(protoContacts []*protoMessages.ProtoContact) []Contact {
 	contacts := []Contact{}
 	for _,protoContact := range protoContacts {
-		protoKademliaID := NewKademliaID(protoContact.GetKademliaId())
-		if !me.ID.Equals(protoKademliaID) {
-			replyContact := NewContact(protoKademliaID, protoContact.GetAddress())
-			contacts = append(contacts, replyContact)
-		}
+		contacts = append(contacts, NewContact(NewKademliaID(protoContact.KademliaId), protoContact.Address))
 	}
 	return contacts
 }
