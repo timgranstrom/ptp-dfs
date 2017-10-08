@@ -106,9 +106,9 @@ func (kademlia *Kademlia) LookupContact(target *Contact) ContactCandidates {
 				replyContacts := ConvertProtobufContacts(reply.message.GetMsg_2().Contacts, kademlia.GetMe())
 
 				//Add replied contacts to the contact candidate list, get the newly added ones
-				newContacts := contactCandidates.AppendNonDuplicates(replyContacts)
+				newContacts := contactCandidates.AppendClosestContacts(replyContacts, *target.ID, 3)
 
-				//Send requests to new closest contacts in goroutine so process can instantly wait for replies
+				//Send requests to new closest contacts in goroutine so process can instantly go back to waiting for replies
 				expectedWorkCount += len(newContacts)
 				go func(contacts []Contact) {
 					for _, contact := range contacts {
@@ -192,7 +192,7 @@ func (kademlia *Kademlia) LookupData(targetHash string) (data []byte, isFound bo
 					replyContacts := ConvertProtobufContacts(reply.message.GetMsg_3().GetContacts(), kademlia.routingTable.me)
 					
 					//Attempt to add the contacts from the reply to candidates and save the ones added
-					newContactCandidates := contactCandidates.AppendNonDuplicates(replyContacts)
+					newContactCandidates := contactCandidates.AppendClosestContacts(replyContacts, *targetId, 3)
 					
 					//See if there are any new candidates to send more requests to
 					expectedWorkCount += len(newContactCandidates)
