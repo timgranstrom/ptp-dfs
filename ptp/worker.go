@@ -2,7 +2,6 @@ package ptp
 
 import (
 	//"fmt"
-	"time"
 	"github.com/timgranstrom/ptp-dfs/protoMessages"
 )
 
