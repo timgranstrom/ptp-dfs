@@ -10,12 +10,12 @@ import (
 	"fmt"
 )
 
-func CreateAndRunNodes(amount int) list.List {
+func CreateAndRunNodes(amount int, originContact *Contact) list.List {
 	nodeList := list.New()
 	for i := 0; i < amount; i++ {
 		nodeList.PushBack(Kademlia{})
 		if i == 0 {
-			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":9%03d", i), nil)
+			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":9%03d", i), originContact)
 		} else {
 			bootstrap := nodeList.Back().Prev().Value.(*Kademlia).routingTable.me
 			nodeList.Back().Value = NewKademlia(fmt.Sprintf(":9%03d", i), &bootstrap)
@@ -28,7 +28,13 @@ func CreateAndRunNodes(amount int) list.List {
 }
 
 func TestKademliaStartAndRunNodes(t *testing.T){
-	CreateAndRunNodes(100)
+	CreateAndRunNodes(100,nil)
+}
+
+func TestKademliaWithDaemon(t *testing.T){
+	daemonContact := NewContact(NewKademliaID("210fc7bb818639ac48a4c6afa2f1581a8b9525e2"),":8000")
+	CreateAndRunNodes(10,&daemonContact)
+	time.Sleep(time.Second*1000)
 }
 
 func TestStoreKademlia(t *testing.T) {
@@ -77,7 +83,7 @@ func TestPingKademlia(t *testing.T) {
 
 func TestLookupDataKademlia(t *testing.T)  {
 	//Create nodes
-	nodeList := CreateAndRunNodes(100)
+	nodeList := CreateAndRunNodes(100,nil)
 
 	//Retrieve data
 	ds := NewDaemonService()
